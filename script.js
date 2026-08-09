@@ -1,5 +1,12 @@
 let products = [];
 
+// ==========================================
+// PRICEFINDER BACKEND API
+// ==========================================
+
+const API_URL =
+  "https://pricefinder-backend.onrender.com/api/search";
+
 
 // ==========================================
 // LOAD PRODUCTS FROM CSV
@@ -7,29 +14,32 @@ let products = [];
 
 fetch("products.csv")
   .then(response => {
+
     if (!response.ok) {
       throw new Error("Could not load products.csv");
     }
 
     return response.text();
   })
+
   .then(csv => {
+
     products = parseCSV(csv);
-    console.log("Products loaded:", products);
+
+    console.log(
+      "Products loaded:",
+      products.length
+    );
+
   })
+
   .catch(error => {
-    console.error("CSV loading error:", error);
 
-    const resultsBox = document.getElementById("results");
+    console.error(
+      "CSV loading error:",
+      error
+    );
 
-    if (resultsBox) {
-      resultsBox.innerHTML = `
-        <div class="error-message">
-          <h2>⚠️ Unable to load products</h2>
-          <p>Please refresh the page and try again.</p>
-        </div>
-      `;
-    }
   });
 
 
@@ -40,14 +50,22 @@ fetch("products.csv")
 function parseCSV(csv) {
 
   const rows = [];
+
   let row = [];
   let value = "";
   let insideQuotes = false;
 
-  for (let i = 0; i < csv.length; i++) {
+  for (
+    let i = 0;
+    i < csv.length;
+    i++
+  ) {
 
-    const character = csv[i];
-    const nextCharacter = csv[i + 1];
+    const character =
+      csv[i];
+
+    const nextCharacter =
+      csv[i + 1];
 
     if (
       character === '"' &&
@@ -58,20 +76,35 @@ function parseCSV(csv) {
       value += '"';
       i++;
 
-    } else if (character === '"') {
+    }
 
-      insideQuotes = !insideQuotes;
+    else if (
+      character === '"'
+    ) {
 
-    } else if (
+      insideQuotes =
+        !insideQuotes;
+
+    }
+
+    else if (
       character === "," &&
       !insideQuotes
     ) {
 
-      row.push(value.trim());
+      row.push(
+        value.trim()
+      );
+
       value = "";
 
-    } else if (
-      (character === "\n" || character === "\r") &&
+    }
+
+    else if (
+      (
+        character === "\n" ||
+        character === "\r"
+      ) &&
       !insideQuotes
     ) {
 
@@ -79,207 +112,532 @@ function parseCSV(csv) {
         character === "\r" &&
         nextCharacter === "\n"
       ) {
+
         i++;
+
       }
 
-      row.push(value.trim());
+      row.push(
+        value.trim()
+      );
 
-      if (row.some(cell => cell !== "")) {
+      if (
+        row.some(
+          cell => cell !== ""
+        )
+      ) {
+
         rows.push(row);
+
       }
 
       row = [];
       value = "";
 
-    } else {
+    }
+
+    else {
 
       value += character;
 
     }
+
   }
 
 
-  if (value !== "" || row.length > 0) {
+  if (
+    value !== "" ||
+    row.length > 0
+  ) {
 
-    row.push(value.trim());
+    row.push(
+      value.trim()
+    );
 
-    if (row.some(cell => cell !== "")) {
+    if (
+      row.some(
+        cell => cell !== ""
+      )
+    ) {
+
       rows.push(row);
+
     }
+
   }
 
 
-  if (rows.length < 2) {
+  if (
+    rows.length < 2
+  ) {
+
     return [];
+
   }
 
 
-  const headers = rows[0].map(header =>
-    header.trim().toLowerCase()
-  );
+  const headers =
+    rows[0].map(
+      header =>
+        header
+          .trim()
+          .toLowerCase()
+    );
 
 
-  return rows.slice(1).map(row => {
+  return rows
+    .slice(1)
+    .map(row => {
 
-    const item = {};
+      const item = {};
 
-    headers.forEach((header, index) => {
-      item[header] = row[index] || "";
-    });
+      headers.forEach(
+        (header, index) => {
+
+          item[header] =
+            row[index] || "";
+
+        }
+      );
 
 
-    return {
+      return {
 
-      name:
-        item["product"] ||
-        item["name"] ||
-        "",
+        name:
+          item["product"] ||
+          item["name"] ||
+          "",
 
-      store:
-        item["store"] ||
-        "",
+        store:
+          item["store"] ||
+          "",
 
-      price:
-        Number(
-          String(item["price"] || "0")
-            .replace(/,/g, "")
-            .replace(/rs\.?/gi, "")
-            .trim()
-        ) || 0,
+        price:
+          Number(
+            String(
+              item["price"] ||
+              "0"
+            )
+              .replace(/,/g, "")
+              .replace(
+                /rs\.?/gi,
+                ""
+              )
+              .replace(
+                /₨/g,
+                ""
+              )
+              .trim()
+          ) || 0,
 
-      shipping:
-        Number(
-          String(item["shipping"] || "0")
-            .replace(/,/g, "")
-            .replace(/rs\.?/gi, "")
-            .trim()
-        ) || 0,
+        shipping:
+          Number(
+            String(
+              item["shipping"] ||
+              "0"
+            )
+              .replace(/,/g, "")
+              .replace(
+                /rs\.?/gi,
+                ""
+              )
+              .replace(
+                /₨/g,
+                ""
+              )
+              .trim()
+          ) || 0,
 
-      currency:
-        item["currency"] ||
-        "NPR",
+        currency:
+          item["currency"] ||
+          "NPR",
 
-      url:
-        item["product url"] ||
-        item["url"] ||
-        "#",
+        url:
+          item["product url"] ||
+          item["url"] ||
+          "#",
 
-      lastUpdated:
-        item["last updated"] ||
-        "Not provided",
+        lastUpdated:
+          item["last updated"] ||
+          "Not provided",
 
-      image:
-        item["image url"] ||
-        item["image"] ||
-        ""
+        image:
+          item["image url"] ||
+          item["image"] ||
+          ""
 
-    };
+      };
 
-  }).filter(product => product.name);
+    })
+
+    .filter(
+      product => product.name
+    );
 
 }
 
 
 // ==========================================
-// SMART SEARCH
+// SMART SEARCH - LIVE API
 // ==========================================
 
-function searchProduct() {
+async function searchProduct() {
 
   const searchInput =
-    document.getElementById("searchInput");
+    document.getElementById(
+      "searchInput"
+    );
 
 
   if (!searchInput) {
+
     return;
+
   }
 
 
   const search =
-    searchInput.value
-      .trim()
-      .toLowerCase();
+    searchInput.value.trim();
 
 
   if (!search) {
 
-    alert("Please enter a product name.");
+    alert(
+      "Please enter a product name."
+    );
 
     return;
+
   }
 
 
-  /*
-    Break the search into individual words.
+  const resultsBox =
+    document.getElementById(
+      "results"
+    );
 
-    Example:
 
-    "Samsung S25"
+  // Show loading
+  if (resultsBox) {
 
-    becomes:
+    resultsBox.innerHTML = `
 
-    ["samsung", "s25"]
-  */
+      <div class="loading-message">
+
+        <h2>
+          🔎 Searching...
+        </h2>
+
+        <p>
+          Checking available stores
+          for the best price.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+
+  try {
+
+    console.log(
+      "Searching PriceFinder API:",
+      search
+    );
+
+
+    const response =
+      await fetch(
+        API_URL +
+        "?q=" +
+        encodeURIComponent(search)
+      );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "API returned status " +
+        response.status
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    console.log(
+      "API response:",
+      data
+    );
+
+
+    if (
+      !data.success ||
+      !Array.isArray(
+        data.results
+      )
+    ) {
+
+      throw new Error(
+        "Invalid API response"
+      );
+
+    }
+
+
+    // Convert backend results
+    // into frontend format
+
+    const apiResults =
+      data.results
+
+        .map(product => {
+
+          const price =
+            Number(
+              product.price
+            ) || 0;
+
+          const shipping =
+            Number(
+              product.shipping
+            ) || 0;
+
+
+          return {
+
+            name:
+              product.name ||
+              "",
+
+            store:
+              product.store ||
+              "Unknown Store",
+
+            price:
+              price,
+
+            shipping:
+              shipping,
+
+            total:
+              price +
+              shipping,
+
+            currency:
+              product.currency ||
+              "NPR",
+
+            url:
+              product.url ||
+              "#",
+
+            lastUpdated:
+              product.lastUpdated ||
+              "Live data",
+
+            image:
+              product.image ||
+              "",
+
+            availability:
+              product.availability ||
+              "Check store"
+
+          };
+
+        })
+
+        .filter(
+          product =>
+            product.name
+        );
+
+
+    // Display live results
+
+    if (
+      apiResults.length > 0
+    ) {
+
+      displayResults(
+        apiResults,
+        true
+      );
+
+      console.log(
+        "Live products found:",
+        apiResults.length
+      );
+
+      return;
+
+    }
+
+
+    // No live products
+    console.log(
+      "No live products found."
+    );
+
+
+    displayNoResults(
+      search
+    );
+
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Live API search failed:",
+      error
+    );
+
+
+    // Try CSV fallback
+
+    searchLocalProducts(
+      search
+    );
+
+  }
+
+}
+
+
+// ==========================================
+// LOCAL CSV FALLBACK
+// ==========================================
+
+function searchLocalProducts(
+  search
+) {
+
+  const searchLower =
+    search
+      .toLowerCase();
+
 
   const searchWords =
-    search
+    searchLower
       .split(/\s+/)
-      .filter(word => word.length > 0);
+      .filter(
+        word =>
+          word.length > 0
+      );
 
 
   const results =
     products
+
       .map(product => {
 
         const productName =
-          product.name.toLowerCase();
+          product.name
+            .toLowerCase();
 
 
         let score = 0;
 
 
         // Exact match
-        if (productName === search) {
+
+        if (
+          productName ===
+          searchLower
+        ) {
+
           score += 100;
+
         }
 
 
         // Full phrase match
-        if (productName.includes(search)) {
+
+        if (
+          productName.includes(
+            searchLower
+          )
+        ) {
+
           score += 50;
+
         }
 
 
-        // Individual word matches
-        searchWords.forEach(word => {
+        // Individual words
 
-          if (productName.includes(word)) {
-            score += 20;
+        searchWords.forEach(
+          word => {
+
+            if (
+              productName.includes(
+                word
+              )
+            ) {
+
+              score += 20;
+
+            }
+
           }
-
-        });
+        );
 
 
         // Starts with search
-        if (productName.startsWith(search)) {
+
+        if (
+          productName.startsWith(
+            searchLower
+          )
+        ) {
+
           score += 30;
+
         }
 
 
         return {
-          product,
-          score
+
+          product:
+            product,
+
+          score:
+            score
+
         };
 
       })
-      .filter(item => item.score > 0)
-      .sort((a, b) =>
-        b.score - a.score
+
+      .filter(
+        item =>
+          item.score > 0
       )
-      .map(item => item.product);
+
+      .sort(
+        (a, b) =>
+          b.score -
+          a.score
+      )
+
+      .map(
+        item =>
+          item.product
+      );
 
 
-  displayResults(results);
+  displayResults(
+    results,
+    false
+  );
+
 }
 
 
@@ -287,7 +645,9 @@ function searchProduct() {
 // CATEGORY SEARCH
 // ==========================================
 
-function searchCategory(category) {
+function searchCategory(
+  category
+) {
 
   const categoryWords = {
 
@@ -341,24 +701,82 @@ function searchCategory(category) {
 
 
   const words =
-    categoryWords[category] || [];
+    categoryWords[
+      category
+    ] || [];
 
 
   const results =
-    products.filter(product => {
+    products.filter(
+      product => {
 
-      const name =
-        product.name.toLowerCase();
-
-
-      return words.some(word =>
-        name.includes(word)
-      );
-
-    });
+        const name =
+          product.name
+            .toLowerCase();
 
 
-  displayResults(results);
+        return words.some(
+          word =>
+            name.includes(word)
+        );
+
+      }
+    );
+
+
+  displayResults(
+    results,
+    false
+  );
+
+}
+
+
+// ==========================================
+// DISPLAY NO RESULTS
+// ==========================================
+
+function displayNoResults(
+  search
+) {
+
+  const resultsBox =
+    document.getElementById(
+      "results"
+    );
+
+
+  if (!resultsBox) {
+
+    return;
+
+  }
+
+
+  resultsBox.innerHTML = `
+
+    <div class="no-results">
+
+      <h2>
+        🔍 No products found
+      </h2>
+
+      <p>
+        No live products were found
+        for
+        <strong>
+          ${escapeHTML(search)}
+        </strong>.
+      </p>
+
+      <p>
+        Try another product name.
+      </p>
+
+    </div>
+
+  `;
+
 }
 
 
@@ -366,24 +784,36 @@ function searchCategory(category) {
 // DISPLAY RESULTS
 // ==========================================
 
-function displayResults(results) {
+function displayResults(
+  results,
+  liveResults = false
+) {
 
   const resultsBox =
-    document.getElementById("results");
+    document.getElementById(
+      "results"
+    );
 
 
   if (!resultsBox) {
+
     return;
+
   }
 
 
-  if (results.length === 0) {
+  if (
+    !results ||
+    results.length === 0
+  ) {
 
     resultsBox.innerHTML = `
 
       <div class="no-results">
 
-        <h2>🔍 No products found</h2>
+        <h2>
+          🔍 No products found
+        </h2>
 
         <p>
           Try another product name.
@@ -394,24 +824,39 @@ function displayResults(results) {
     `;
 
     return;
+
   }
 
 
-  // Calculate total prices
+  // Calculate totals
 
-  results.forEach(product => {
+  results.forEach(
+    product => {
 
-    product.total =
-      product.price +
-      product.shipping;
+      product.price =
+        Number(
+          product.price
+        ) || 0;
 
-  });
+      product.shipping =
+        Number(
+          product.shipping
+        ) || 0;
+
+      product.total =
+        product.price +
+        product.shipping;
+
+    }
+  );
 
 
   // Cheapest first
 
-  results.sort((a, b) =>
-    a.total - b.total
+  results.sort(
+    (a, b) =>
+      a.total -
+      b.total
   );
 
 
@@ -421,8 +866,9 @@ function displayResults(results) {
 
   const highestPrice =
     Math.max(
-      ...results.map(product =>
-        product.total
+      ...results.map(
+        product =>
+          product.total
       )
     );
 
@@ -435,15 +881,23 @@ function displayResults(results) {
   let bestImage = "";
 
 
-  if (cheapest.image) {
+  if (
+    cheapest.image
+  ) {
 
     bestImage = `
 
       <img
-        src="${escapeHTML(cheapest.image)}"
-        alt="${escapeHTML(cheapest.name)}"
+        src="${escapeHTML(
+          cheapest.image
+        )}"
+        alt="${escapeHTML(
+          cheapest.name
+        )}"
         class="best-product-image"
-        onerror="this.style.display='none'"
+        onerror="
+          this.style.display='none'
+        "
       >
 
     `;
@@ -451,9 +905,36 @@ function displayResults(results) {
   }
 
 
+  const liveBadge =
+    liveResults
+      ? `
+        <span class="live-badge">
+          🟢 LIVE
+        </span>
+      `
+      : "";
+
+
   resultsBox.innerHTML = `
 
-    <h2>🥇 Best Price</h2>
+    <div class="results-header">
+
+      <h2>
+        🥇 Best Price
+      </h2>
+
+      ${liveBadge}
+
+      <p>
+        Found
+        <strong>
+          ${results.length}
+        </strong>
+        product${results.length === 1 ? "" : "s"}
+      </p>
+
+    </div>
+
 
     <div class="best-price">
 
@@ -464,38 +945,72 @@ function displayResults(results) {
       </span>
 
       <h2>
-        ${escapeHTML(cheapest.name)}
+        ${escapeHTML(
+          cheapest.name
+        )}
       </h2>
 
       <h3>
-        Rs. ${formatPrice(cheapest.total)}
+        Rs.
+        ${formatPrice(
+          cheapest.total
+        )}
       </h3>
 
       <p>
-        🏪 ${escapeHTML(cheapest.store)}
+        🏪
+        ${escapeHTML(
+          cheapest.store
+        )}
       </p>
 
       <p>
         Product:
-        Rs. ${formatPrice(cheapest.price)}
+        Rs.
+        ${formatPrice(
+          cheapest.price
+        )}
 
         <br>
 
         Shipping:
-        Rs. ${formatPrice(cheapest.shipping)}
+        Rs.
+        ${formatPrice(
+          cheapest.shipping
+        )}
       </p>
+
+      ${
+        cheapest.availability
+          ? `
+            <p>
+              📦
+              ${escapeHTML(
+                cheapest.availability
+              )}
+            </p>
+          `
+          : ""
+      }
 
       <p class="saving">
 
         💰 You save
-        Rs. ${formatPrice(savings)}
+
+        Rs.
+        ${formatPrice(
+          savings
+        )}
 
       </p>
 
       <p class="updated">
 
         🕐 Last updated:
-        ${escapeHTML(cheapest.lastUpdated)}
+
+        ${escapeHTML(
+          cheapest.lastUpdated
+        )}
 
       </p>
 
@@ -514,95 +1029,147 @@ function displayResults(results) {
 
     <div class="comparison-list">
 
-      ${results.map((product, index) => {
+      ${results
+        .map(
+          (
+            product,
+            index
+          ) => {
 
-        let imageHTML = "";
-
-
-        if (product.image) {
-
-          imageHTML = `
-
-            <img
-              src="${escapeHTML(product.image)}"
-              alt="${escapeHTML(product.name)}"
-              class="product-image"
-              onerror="this.style.display='none'"
-            >
-
-          `;
-
-        }
+            let imageHTML =
+              "";
 
 
-        return `
+            if (
+              product.image
+            ) {
 
-          <div class="product">
+              imageHTML = `
 
-            <div class="product-info">
+                <img
+                  src="${escapeHTML(
+                    product.image
+                  )}"
+                  alt="${escapeHTML(
+                    product.name
+                  )}"
+                  class="product-image"
+                  onerror="
+                    this.style.display='none'
+                  "
+                >
 
-              ${imageHTML}
+              `;
 
-              <div>
+            }
 
-                <h3>
 
-                  ${
-                    index === 0
-                      ? "🥇 "
-                      : ""
-                  }
+            return `
 
-                  ${escapeHTML(product.store)}
+              <div class="product">
 
-                </h3>
+                <div class="product-info">
 
-                <p>
-                  ${escapeHTML(product.name)}
-                </p>
+                  ${imageHTML}
 
-                <p>
-                  Product:
-                  Rs. ${formatPrice(product.price)}
-                </p>
+                  <div>
 
-                <p>
-                  Shipping:
-                  Rs. ${formatPrice(product.shipping)}
-                </p>
+                    <h3>
 
-                <p class="updated">
+                      ${
+                        index === 0
+                          ? "🥇 "
+                          : ""
+                      }
 
-                  🕐
-                  ${escapeHTML(product.lastUpdated)}
+                      ${escapeHTML(
+                        product.store
+                      )}
 
-                </p>
+                    </h3>
+
+
+                    <p>
+                      ${escapeHTML(
+                        product.name
+                      )}
+                    </p>
+
+
+                    <p>
+                      Product:
+                      Rs.
+                      ${formatPrice(
+                        product.price
+                      )}
+                    </p>
+
+
+                    <p>
+                      Shipping:
+                      Rs.
+                      ${formatPrice(
+                        product.shipping
+                      )}
+                    </p>
+
+
+                    ${
+                      product.availability
+                        ? `
+                          <p>
+                            📦
+                            ${escapeHTML(
+                              product.availability
+                            )}
+                          </p>
+                        `
+                        : ""
+                    }
+
+
+                    <p class="updated">
+
+                      🕐
+                      ${escapeHTML(
+                        product.lastUpdated
+                      )}
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <div>
+
+                  <strong>
+
+                    Rs.
+                    ${formatPrice(
+                      product.total
+                    )}
+
+                  </strong>
+
+                  <br>
+                  <br>
+
+                  ${dealButton(
+                    product.url,
+                    "VIEW"
+                  )}
+
+                </div>
 
               </div>
 
-            </div>
+            `;
 
-
-            <div>
-
-              <strong>
-                Rs. ${formatPrice(product.total)}
-              </strong>
-
-              <br><br>
-
-              ${dealButton(
-                product.url,
-                "VIEW"
-              )}
-
-            </div>
-
-          </div>
-
-        `;
-
-      }).join("")}
+          }
+        )
+        .join("")}
 
     </div>
 
@@ -615,10 +1182,15 @@ function displayResults(results) {
 // PRICE FORMAT
 // ==========================================
 
-function formatPrice(price) {
+function formatPrice(
+  price
+) {
 
-  return Number(price || 0)
-    .toLocaleString("en-IN");
+  return Number(
+    price || 0
+  ).toLocaleString(
+    "en-IN"
+  );
 
 }
 
@@ -627,7 +1199,10 @@ function formatPrice(price) {
 // DEAL BUTTON
 // ==========================================
 
-function dealButton(url, text) {
+function dealButton(
+  url,
+  text
+) {
 
   if (
     !url ||
@@ -652,12 +1227,16 @@ function dealButton(url, text) {
   return `
 
     <a
-      href="${escapeHTML(url)}"
+      href="${escapeHTML(
+        url
+      )}"
       target="_blank"
       rel="noopener noreferrer"
     >
 
-      <button type="button">
+      <button
+        type="button"
+      >
         ${text}
       </button>
 
@@ -672,13 +1251,37 @@ function dealButton(url, text) {
 // ESCAPE HTML
 // ==========================================
 
-function escapeHTML(value) {
+function escapeHTML(
+  value
+) {
 
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(
+    value || ""
+  )
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
