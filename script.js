@@ -1,44 +1,41 @@
 const products = [
   {
     name: "Samsung Galaxy S25 256GB",
-    store: "Store A",
+    store: "Daraz Nepal",
     price: 109999,
     shipping: 0,
-    url: "#"
+    url: "https://www.daraz.com.np/"
   },
+
   {
     name: "Samsung Galaxy S25 256GB",
-    store: "Store B",
+    store: "Nepali Online Store",
     price: 112000,
     shipping: 200,
     url: "#"
   },
+
   {
     name: "Samsung Galaxy S25 256GB",
-    store: "Store C",
+    store: "Local Online Store",
     price: 108500,
     shipping: 1500,
     url: "#"
   },
+
   {
     name: "iPhone 15 128GB",
-    store: "Store A",
+    store: "Daraz Nepal",
     price: 82000,
     shipping: 0,
-    url: "#"
+    url: "https://www.daraz.com.np/"
   },
+
   {
     name: "iPhone 15 128GB",
-    store: "Store B",
+    store: "Nepali Online Store",
     price: 79999,
     shipping: 500,
-    url: "#"
-  },
-  {
-    name: "iPhone 15 128GB",
-    store: "Store C",
-    price: 84500,
-    shipping: 0,
     url: "#"
   }
 ];
