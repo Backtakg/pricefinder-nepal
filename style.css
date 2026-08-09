@@ -295,3 +295,236 @@ a {
   }
 
 }
+/* ==========================================
+   PRICEFINDER MODERN DESIGN
+   ========================================== */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  color: #222;
+}
+
+header {
+  padding: 35px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #1769aa, #0d47a1);
+  color: white;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 38px;
+}
+
+header p {
+  margin-top: 10px;
+  font-size: 17px;
+}
+
+.categories {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 15px 0;
+  margin-bottom: 10px;
+}
+
+.categories button {
+  border: none;
+  background: white;
+  padding: 11px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.categories button:hover {
+  background: #1769aa;
+  color: white;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 25px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: #1769aa;
+}
+
+.search-box button {
+  padding: 0 25px;
+  border: none;
+  border-radius: 10px;
+  background: #1769aa;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.search-box button:hover {
+  opacity: 0.9;
+}
+
+.best-price {
+  background: white;
+  border: 3px solid #16a34a;
+  border-radius: 18px;
+  padding: 30px;
+  margin: 20px 0 35px;
+  text-align: center;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.best-price h2 {
+  font-size: 28px;
+}
+
+.best-price h3 {
+  font-size: 34px;
+  margin: 15px 0;
+}
+
+.badge {
+  display: inline-block;
+  background: #16a34a;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.saving {
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.updated {
+  color: #777;
+  font-size: 13px;
+}
+
+.product {
+  background: white;
+  padding: 22px;
+  margin: 15px 0;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+}
+
+.product h3 {
+  margin-top: 0;
+}
+
+.product strong {
+  font-size: 23px;
+}
+
+.product-info {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.product-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: white;
+}
+
+.best-product-image {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 20px;
+}
+
+.product button,
+.best-price button {
+  background: #1769aa;
+  color: white;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.product button:hover,
+.best-price button:hover {
+  opacity: 0.85;
+}
+
+.product button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.no-results,
+.error-message {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+
+  header h1 {
+    font-size: 28px;
+  }
+
+  .search-box {
+    flex-direction: column;
+  }
+
+  .search-box button {
+    padding: 14px;
+  }
+
+  .product {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .product-info {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .product > div:last-child {
+    width: 100%;
+  }
+
+  .product button {
+    width: 100%;
+  }
+
+  .best-product-image {
+    width: 140px;
+    height: 140px;
+  }
+
+}
