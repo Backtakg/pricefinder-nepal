@@ -709,3 +709,90 @@ body.dark-mode a {
 body.dark-mode .comparison-list {
   color: #eeeeee;
 }
+/* ==========================================
+   ANIMATED DAY / NIGHT BUTTON
+   ========================================== */
+
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+
+  min-width: 125px;
+  padding: 11px 18px;
+
+  border: 2px solid rgba(255,255,255,0.7);
+  border-radius: 50px;
+
+  background: rgba(255,255,255,0.95);
+  color: #222;
+
+  font-size: 14px;
+  font-weight: bold;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+
+  transition:
+    all 0.35s ease,
+    transform 0.2s ease;
+}
+
+
+/* Hover animation */
+
+.theme-toggle:hover {
+  transform: translateY(-2px) scale(1.04);
+
+  box-shadow:
+    0 7px 20px rgba(0,0,0,0.25);
+}
+
+
+/* Click animation */
+
+.theme-toggle:active {
+  transform: scale(0.92);
+}
+
+
+/* Dark mode button */
+
+body.dark-mode .theme-toggle {
+  background: #202938 !important;
+  color: #ffffff !important;
+
+  border-color: #64748b !important;
+
+  box-shadow:
+    0 4px 18px rgba(0,0,0,0.5);
+}
+
+
+/* Dark mode hover */
+
+body.dark-mode .theme-toggle:hover {
+  background: #334155 !important;
+
+  transform:
+    translateY(-2px)
+    scale(1.04);
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+  .theme-toggle {
+    position: static;
+
+    display: block;
+
+    margin: 15px auto 0;
+
+    min-width: 130px;
+  }
+
+}
