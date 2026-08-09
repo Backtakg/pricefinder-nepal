@@ -528,3 +528,93 @@ header p {
   }
 
 }
+/* ==========================================
+   DAY / NIGHT MODE
+   ========================================== */
+
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 25px;
+
+  background: white;
+  color: #222;
+
+  cursor: pointer;
+  font-weight: bold;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.03);
+}
+
+
+/* DARK MODE */
+
+body.dark-mode {
+  background: #121212;
+  color: #eeeeee;
+}
+
+body.dark-mode header {
+  background: linear-gradient(
+    135deg,
+    #111827,
+    #1e293b
+  );
+}
+
+body.dark-mode .categories button {
+  background: #1f2937;
+  color: #eeeeee;
+}
+
+body.dark-mode .categories button:hover {
+  background: #3b82f6;
+}
+
+body.dark-mode .search-box input {
+  background: #1f2937;
+  color: white;
+  border-color: #374151;
+}
+
+body.dark-mode .search-box input::placeholder {
+  color: #aaa;
+}
+
+body.dark-mode .best-price,
+body.dark-mode .product,
+body.dark-mode .no-results,
+body.dark-mode .error-message {
+  background: #1f1f1f;
+  color: #eeeeee;
+}
+
+body.dark-mode .updated {
+  color: #aaa;
+}
+
+body.dark-mode .theme-toggle {
+  background: #1f2937;
+  color: white;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  .theme-toggle {
+    position: static;
+    margin-top: 15px;
+  }
+
+}
