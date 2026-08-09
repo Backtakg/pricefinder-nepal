@@ -1,32 +1,586 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="PriceFinder Nepal — compare prices and find the best deals.">
-<title>PriceFinder Nepal ⚡</title><link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="PriceFinder Nepal — compare prices and find the best deals from Nepali stores."
+  >
+
+  <title>PriceFinder Nepal ⚡</title>
+
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div class="bg-glow glow-one"></div><div class="bg-glow glow-two"></div>
-<header class="site-header">
-<a href="index.html" class="brand" aria-label="PriceFinder Nepal home"><span class="brand-mark"><span class="brand-tag">₨</span><span class="brand-spark">✦</span></span><span class="brand-copy"><strong>PriceFinder</strong><small>NEPAL</small></span></a>
-<div class="header-actions"><span class="nepal-pill">🇳🇵 Made for Nepal</span><button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" type="button">🌙</button></div>
-</header>
-<main class="page-shell">
-<section class="hero">
-<div class="hero-kicker"><span></span> SMART SHOPPING, LESS SPENDING</div>
-<h1>Find the <em>lowest price.</em><br>Keep the extra cash.</h1>
-<p class="hero-text">Search once. Compare prices across stores. Grab the best deal in Nepal.</p>
-<div class="search-box"><span class="search-icon">⌕</span><input type="text" id="searchInput" placeholder="What are you looking for? e.g. iPhone 15..." autocomplete="off" onkeydown="if(event.key==='Enter') searchProduct()"><button onclick="searchProduct()" type="button">Search <span>→</span></button></div>
-<div class="search-hint"><span>Try:</span><button onclick="document.getElementById('searchInput').value='iPhone';searchProduct()" type="button">iPhone</button><button onclick="document.getElementById('searchInput').value='laptop';searchProduct()" type="button">Laptop</button><button onclick="document.getElementById('searchInput').value='headphones';searchProduct()" type="button">Headphones</button><button onclick="document.getElementById('searchInput').value='tripod';searchProduct()" type="button">Tripod</button></div>
-</section>
-<section class="category-section"><div class="section-label">BROWSE BY CATEGORY</div><div class="categories">
-<button onclick="searchCategory('phone')" type="button"><span>📱</span>Phones</button><button onclick="searchCategory('laptop')" type="button"><span>💻</span>Laptops</button><button onclick="searchCategory('audio')" type="button"><span>🎧</span>Audio</button><button onclick="searchCategory('tv')" type="button"><span>📺</span>TVs</button><button onclick="searchCategory('electronics')" type="button"><span>⚡</span>Electronics</button>
-</div></section>
-<section id="results" class="results-panel"><div class="empty-state"><div class="empty-icon">₨</div><h2>Ready when you are.</h2><p>Search for a product and we'll hunt down the best price.</p><div class="mini-stats"><span>⚡ Live search</span><span>↕ Price comparison</span><span>💸 Find savings</span></div></div></section>
-</main>
-<footer class="site-footer"><div class="footer-brand">⚡ PriceFinder Nepal</div><p>Compare smarter. Spend better. 🇳🇵</p><small>© 2026 PriceFinder Nepal</small></footer>
-<script src="script.js"></script><script>
-function toggleTheme(){document.body.classList.toggle('light-mode');const b=document.getElementById('themeToggle');const l=document.body.classList.contains('light-mode');b.innerHTML=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark')}
-if(localStorage.getItem('theme')==='light'){document.body.classList.add('light-mode');document.getElementById('themeToggle').innerHTML='☀️'}
-</script>
-</body></html>
+
+  <!-- ==========================================
+       BACKGROUND GLOW
+  =========================================== -->
+
+  <div class="bg-glow glow-one"></div>
+  <div class="bg-glow glow-two"></div>
+
+
+  <!-- ==========================================
+       HEADER
+  =========================================== -->
+
+  <header class="site-header">
+
+    <!-- LOGO -->
+
+    <a
+      href="index.html"
+      class="brand"
+      aria-label="PriceFinder Nepal home"
+    >
+
+      <span
+        class="brand-mark"
+        aria-hidden="true"
+      >
+
+        <span class="brand-tag">
+          ₨
+        </span>
+
+        <span class="brand-spark">
+          ✦
+        </span>
+
+      </span>
+
+
+      <span class="brand-copy">
+
+        <strong>
+          PriceFinder
+        </strong>
+
+        <small>
+          NEPAL
+        </small>
+
+      </span>
+
+    </a>
+
+
+    <!-- HEADER ACTIONS -->
+
+    <div class="header-actions">
+
+      <span class="nepal-pill">
+        🇳🇵 Made for Nepal
+      </span>
+
+
+      <!-- THEME BUTTON -->
+
+      <button
+        id="themeToggle"
+        class="theme-toggle"
+        type="button"
+        aria-label="Switch to light mode"
+      >
+        🌙
+      </button>
+
+    </div>
+
+  </header>
+
+
+
+  <!-- ==========================================
+       MAIN
+  =========================================== -->
+
+  <main class="page-shell">
+
+
+    <!-- ========================================
+         HERO
+    ========================================= -->
+
+    <section class="hero">
+
+      <div class="hero-kicker">
+
+        <span></span>
+
+        SMART SHOPPING, LESS SPENDING
+
+      </div>
+
+
+      <h1>
+
+        Find the
+        <em>
+          lowest price.
+        </em>
+
+        <br>
+
+        Keep the extra cash.
+
+      </h1>
+
+
+      <p class="hero-text">
+
+        Search once. Compare prices across stores.
+        Grab the best deal in Nepal.
+
+      </p>
+
+
+
+      <!-- ======================================
+           SEARCH
+      ====================================== -->
+
+      <div class="search-box">
+
+        <span
+          class="search-icon"
+          aria-hidden="true"
+        >
+          ⌕
+        </span>
+
+
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="What are you looking for? e.g. iPhone 15..."
+          autocomplete="off"
+          aria-label="Search for a product"
+          onkeydown="
+            if(event.key === 'Enter')
+            searchProduct()
+          "
+        >
+
+
+        <button
+          onclick="searchProduct()"
+          type="button"
+        >
+
+          Search
+
+          <span>
+            →
+          </span>
+
+        </button>
+
+      </div>
+
+
+
+      <!-- QUICK SEARCH -->
+
+      <div class="search-hint">
+
+        <span>
+          Try:
+        </span>
+
+
+        <button
+          type="button"
+          onclick="
+            document.getElementById('searchInput').value='iPhone';
+            searchProduct();
+          "
+        >
+          iPhone
+        </button>
+
+
+        <button
+          type="button"
+          onclick="
+            document.getElementById('searchInput').value='laptop';
+            searchProduct();
+          "
+        >
+          Laptop
+        </button>
+
+
+        <button
+          type="button"
+          onclick="
+            document.getElementById('searchInput').value='headphones';
+            searchProduct();
+          "
+        >
+          Headphones
+        </button>
+
+
+        <button
+          type="button"
+          onclick="
+            document.getElementById('searchInput').value='tripod';
+            searchProduct();
+          "
+        >
+          Tripod
+        </button>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ========================================
+         CATEGORIES
+    ========================================= -->
+
+    <section class="category-section">
+
+      <div class="section-label">
+        BROWSE BY CATEGORY
+      </div>
+
+
+      <div class="categories">
+
+
+        <button
+          type="button"
+          onclick="searchCategory('phone')"
+        >
+
+          <span>
+            📱
+          </span>
+
+          Phones
+
+        </button>
+
+
+
+        <button
+          type="button"
+          onclick="searchCategory('laptop')"
+        >
+
+          <span>
+            💻
+          </span>
+
+          Laptops
+
+        </button>
+
+
+
+        <button
+          type="button"
+          onclick="searchCategory('audio')"
+        >
+
+          <span>
+            🎧
+          </span>
+
+          Audio
+
+        </button>
+
+
+
+        <button
+          type="button"
+          onclick="searchCategory('tv')"
+        >
+
+          <span>
+            📺
+          </span>
+
+          TVs
+
+        </button>
+
+
+
+        <button
+          type="button"
+          onclick="searchCategory('electronics')"
+        >
+
+          <span>
+            ⚡
+          </span>
+
+          Electronics
+
+        </button>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ========================================
+         RESULTS
+         
+         IMPORTANT:
+         Your existing script.js writes the
+         search results into this container.
+    ========================================= -->
+
+    <section
+      id="results"
+      class="results-panel"
+    >
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          ₨
+        </div>
+
+
+        <h2>
+          Ready when you are.
+        </h2>
+
+
+        <p>
+          Search for a product and
+          we'll hunt down the best price.
+        </p>
+
+
+        <div class="mini-stats">
+
+          <span>
+            ⚡ Live search
+          </span>
+
+          <span>
+            ↕ Price comparison
+          </span>
+
+          <span>
+            💸 Find savings
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+
+  <!-- ==========================================
+       FOOTER
+  =========================================== -->
+
+  <footer class="site-footer">
+
+    <div class="footer-brand">
+      ⚡ PriceFinder Nepal
+    </div>
+
+
+    <p>
+      Compare smarter. Spend better. 🇳🇵
+    </p>
+
+
+    <small>
+      © 2026 PriceFinder Nepal
+    </small>
+
+  </footer>
+
+
+
+  <!-- ==========================================
+       YOUR EXISTING SEARCH SCRIPT
+       
+       DO NOT CHANGE script.js
+  =========================================== -->
+
+  <script src="script.js"></script>
+
+
+
+  <!-- ==========================================
+       DARK / LIGHT THEME
+  =========================================== -->
+
+  <script>
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      function () {
+
+        const toggle =
+          document.getElementById(
+            "themeToggle"
+          );
+
+
+        /*
+         * Make sure the button exists.
+         */
+
+        if (!toggle) {
+          return;
+        }
+
+
+        /*
+         * Get saved theme.
+         */
+
+        const savedTheme =
+          localStorage.getItem(
+            "pricefinder-theme"
+          );
+
+
+        /*
+         * Apply theme.
+         */
+
+        function applyTheme(theme) {
+
+          const isLight =
+            theme === "light";
+
+
+          /*
+           * Add/remove light-mode
+           * class from BODY.
+           */
+
+          document.body.classList.toggle(
+            "light-mode",
+            isLight
+          );
+
+
+          /*
+           * Change button icon.
+           */
+
+          toggle.textContent =
+            isLight
+              ? "☀️"
+              : "🌙";
+
+
+          /*
+           * Accessibility label.
+           */
+
+          toggle.setAttribute(
+            "aria-label",
+            isLight
+              ? "Switch to dark mode"
+              : "Switch to light mode"
+          );
+
+        }
+
+
+        /*
+         * Load saved theme.
+         *
+         * Default = DARK
+         */
+
+        if (
+          savedTheme === "light"
+        ) {
+
+          applyTheme("light");
+
+        } else {
+
+          applyTheme("dark");
+
+        }
+
+
+        /*
+         * THEME BUTTON CLICK
+         */
+
+        toggle.addEventListener(
+          "click",
+          function () {
+
+
+            /*
+             * Check current mode.
+             */
+
+            const currentlyLight =
+              document.body.classList.contains(
+                "light-mode"
+              );
+
+
+            /*
+             * Choose next mode.
+             */
+
+            const nextTheme =
+              currentlyLight
+                ? "dark"
+                : "light";
+
+
+            /*
+             * Save theme.
+             */
+
+            localStorage.setItem(
+              "pricefinder-theme",
+              nextTheme
+            );
+
+
+            /*
+             * Apply theme.
+             */
+
+            applyTheme(
+              nextTheme
+            );
+
+          }
+        );
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
