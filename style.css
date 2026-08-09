@@ -113,3 +113,31 @@ footer {
   }
 
 }
+.best-price {
+  background: white;
+  border: 3px solid #16a34a;
+  border-radius: 12px;
+  padding: 25px;
+  margin: 15px 0;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.best-price h3 {
+  font-size: 30px;
+  color: #16a34a;
+}
+
+.best-price button,
+.product button {
+  background: #1769aa;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+}
