@@ -230,3 +230,25 @@ a {
   }
 
 }
+.categories {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 20px 0;
+  padding-bottom: 5px;
+}
+
+.categories button {
+  white-space: nowrap;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.categories button:hover {
+  background: #1769aa;
+  color: white;
+}
