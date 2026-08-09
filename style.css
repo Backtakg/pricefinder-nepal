@@ -141,3 +141,8 @@ footer {
 a {
   text-decoration: none;
 }
+.updated {
+  color: #666;
+  font-size: 13px;
+  margin-top: 15px;
+}
