@@ -1,65 +1,220 @@
 let products = [];
 
 
-// Load products from CSV
+// ==========================================
+// LOAD PRODUCTS FROM CSV
+// ==========================================
+
 fetch("products.csv")
-  .then(response => response.text())
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Could not load products.csv");
+    }
+
+    return response.text();
+  })
   .then(csv => {
     products = parseCSV(csv);
+
     console.log("Products loaded:", products);
   })
   .catch(error => {
-    console.error("Could not load products.csv:", error);
+    console.error("CSV loading error:", error);
+
+    const resultsBox = document.getElementById("results");
+
+    if (resultsBox) {
+      resultsBox.innerHTML = `
+        <div class="error-message">
+          <h2>⚠️ Unable to load products</h2>
+          <p>Please try refreshing the page.</p>
+        </div>
+      `;
+    }
   });
 
 
-// Convert CSV into products
+// ==========================================
+// CSV PARSER
+// ==========================================
+
 function parseCSV(csv) {
 
-  const lines = csv.trim().split("\n");
+  const rows = [];
+  let row = [];
+  let value = "";
+  let insideQuotes = false;
 
-  return lines.slice(1).map(line => {
+  for (let i = 0; i < csv.length; i++) {
 
-    const values = line.split(",");
+    const character = csv[i];
+    const nextCharacter = csv[i + 1];
+
+    if (character === '"' && insideQuotes && nextCharacter === '"') {
+
+      value += '"';
+      i++;
+
+    } else if (character === '"') {
+
+      insideQuotes = !insideQuotes;
+
+    } else if (character === "," && !insideQuotes) {
+
+      row.push(value.trim());
+      value = "";
+
+    } else if (
+      (character === "\n" || character === "\r") &&
+      !insideQuotes
+    ) {
+
+      if (character === "\r" && nextCharacter === "\n") {
+        i++;
+      }
+
+      row.push(value.trim());
+
+      if (row.some(cell => cell !== "")) {
+        rows.push(row);
+      }
+
+      row = [];
+      value = "";
+
+    } else {
+
+      value += character;
+
+    }
+  }
+
+
+  // Add final row
+  if (value !== "" || row.length > 0) {
+
+    row.push(value.trim());
+
+    if (row.some(cell => cell !== "")) {
+      rows.push(row);
+    }
+  }
+
+
+  if (rows.length < 2) {
+    return [];
+  }
+
+
+  const headers = rows[0].map(header =>
+    header.trim().toLowerCase()
+  );
+
+
+  return rows.slice(1).map(row => {
+
+    const item = {};
+
+    headers.forEach((header, index) => {
+      item[header] = row[index] || "";
+    });
+
 
     return {
-      name: values[0]?.trim() || "",
-      store: values[1]?.trim() || "",
-      price: Number(values[2]) || 0,
-      shipping: Number(values[3]) || 0,
-      currency: values[4]?.trim() || "NPR",
-      url: values[5]?.trim() || "#",
-      lastUpdated: values[6]?.trim() || "Not provided",
-      image: values[7]?.trim() || ""
+
+      name:
+        item["product"] ||
+        item["name"] ||
+        "",
+
+      store:
+        item["store"] ||
+        "",
+
+      price:
+        Number(
+          String(item["price"] || "0")
+            .replace(/,/g, "")
+            .replace(/rs\.?/gi, "")
+            .trim()
+        ) || 0,
+
+      shipping:
+        Number(
+          String(item["shipping"] || "0")
+            .replace(/,/g, "")
+            .replace(/rs\.?/gi, "")
+            .trim()
+        ) || 0,
+
+      currency:
+        item["currency"] ||
+        "NPR",
+
+      url:
+        item["product url"] ||
+        item["url"] ||
+        "#",
+
+      lastUpdated:
+        item["last updated"] ||
+        "Not provided",
+
+      image:
+        item["image url"] ||
+        item["image"] ||
+        ""
+
     };
 
   }).filter(product => product.name);
+
 }
 
 
-// Search products
+// ==========================================
+// SEARCH PRODUCT
+// ==========================================
+
 function searchProduct() {
 
   const searchInput =
     document.getElementById("searchInput");
 
-  const search =
-    searchInput.value.trim().toLowerCase();
 
-  if (!search) {
-    alert("Please enter a product name.");
+  if (!searchInput) {
+    console.error("Search input not found.");
     return;
   }
 
+
+  const search =
+    searchInput.value.trim().toLowerCase();
+
+
+  if (!search) {
+
+    alert("Please enter a product name.");
+
+    return;
+  }
+
+
   const results = products.filter(product =>
-    product.name.toLowerCase().includes(search)
+    product.name
+      .toLowerCase()
+      .includes(search)
   );
+
 
   displayResults(results);
 }
 
 
-// Search by category
+// ==========================================
+// CATEGORY SEARCH
+// ==========================================
+
 function searchCategory(category) {
 
   const categoryWords = {
@@ -86,9 +241,12 @@ function searchCategory(category) {
 
     audio: [
       "headphone",
+      "headphones",
       "earphone",
+      "earphones",
       "earbuds",
       "speaker",
+      "speakers",
       "sony",
       "airpods"
     ],
@@ -103,16 +261,22 @@ function searchCategory(category) {
       "camera",
       "monitor",
       "tablet",
-      "watch"
+      "watch",
+      "electronics"
     ]
 
   };
 
-  const words = categoryWords[category] || [];
+
+  const words =
+    categoryWords[category] || [];
+
 
   const results = products.filter(product => {
 
-    const name = product.name.toLowerCase();
+    const name =
+      product.name.toLowerCase();
+
 
     return words.some(word =>
       name.includes(word)
@@ -120,118 +284,188 @@ function searchCategory(category) {
 
   });
 
+
   displayResults(results);
 }
 
 
-// Display results
+// ==========================================
+// DISPLAY RESULTS
+// ==========================================
+
 function displayResults(results) {
 
   const resultsBox =
     document.getElementById("results");
 
+
   if (!resultsBox) {
+    console.error("Results container not found.");
     return;
   }
 
 
+  // ----------------------------------------
+  // NO RESULTS
+  // ----------------------------------------
+
   if (results.length === 0) {
 
     resultsBox.innerHTML = `
-      <h2>No products found</h2>
-      <p>Try another product or category.</p>
+
+      <div class="no-results">
+
+        <h2>🔍 No products found</h2>
+
+        <p>
+          Try another product or category.
+        </p>
+
+      </div>
+
     `;
 
     return;
   }
 
 
-  // Calculate total price
+  // ----------------------------------------
+  // CALCULATE TOTAL PRICE
+  // ----------------------------------------
+
   results.forEach(product => {
 
     product.total =
-      product.price + product.shipping;
+      product.price +
+      product.shipping;
 
   });
 
 
-  // Cheapest first
+  // ----------------------------------------
+  // CHEAPEST FIRST
+  // ----------------------------------------
+
   results.sort((a, b) =>
     a.total - b.total
   );
 
 
-  const cheapest = results[0];
+  const cheapest =
+    results[0];
+
+
+  // ----------------------------------------
+  // HIGHEST PRICE
+  // ----------------------------------------
 
   const highestPrice =
-    Math.max(...results.map(product => product.total));
+    Math.max(
+      ...results.map(product =>
+        product.total
+      )
+    );
+
+
+  // ----------------------------------------
+  // SAVINGS
+  // ----------------------------------------
 
   const savings =
-    highestPrice - cheapest.total;
+    highestPrice -
+    cheapest.total;
 
 
-  // Best product image
-  const bestImage = cheapest.image
-    ? `<img
-         src="${cheapest.image}"
-         alt="${cheapest.name}"
-         class="best-product-image"
-         onerror="this.style.display='none'"
-       >`
-    : "";
+  // ----------------------------------------
+  // BEST PRODUCT IMAGE
+  // ----------------------------------------
 
+  let bestImage = "";
+
+
+  if (cheapest.image) {
+
+    bestImage = `
+
+      <img
+        src="${escapeHTML(cheapest.image)}"
+        alt="${escapeHTML(cheapest.name)}"
+        class="best-product-image"
+        onerror="this.style.display='none'"
+      >
+
+    `;
+
+  }
+
+
+  // ----------------------------------------
+  // BEST DEAL
+  // ----------------------------------------
 
   resultsBox.innerHTML = `
 
     <h2>🥇 Best Price</h2>
 
+
     <div class="best-price">
 
       ${bestImage}
+
 
       <span class="badge">
         LOWEST TOTAL PRICE
       </span>
 
+
       <h2>
-        ${cheapest.name}
+        ${escapeHTML(cheapest.name)}
       </h2>
 
+
       <h3>
-        Rs. ${cheapest.total.toLocaleString()}
+        Rs. ${formatPrice(cheapest.total)}
       </h3>
 
-      <p>
-        🏪 ${cheapest.store}
-      </p>
 
       <p>
+        🏪 ${escapeHTML(cheapest.store)}
+      </p>
+
+
+      <p>
+
         Product:
-        Rs. ${cheapest.price.toLocaleString()}
+        Rs. ${formatPrice(cheapest.price)}
+
         <br>
 
         Shipping:
-        Rs. ${cheapest.shipping.toLocaleString()}
+        Rs. ${formatPrice(cheapest.shipping)}
+
       </p>
+
 
       <p class="saving">
+
         💰 You save
-        Rs. ${savings.toLocaleString()}
+        Rs. ${formatPrice(savings)}
+
       </p>
+
 
       <p class="updated">
+
         🕐 Last updated:
-        ${cheapest.lastUpdated}
+        ${escapeHTML(cheapest.lastUpdated)}
+
       </p>
 
-      <a
-        href="${cheapest.url}"
-        target="_blank"
-      >
-        <button>
-          VIEW BEST DEAL
-        </button>
-      </a>
+
+      ${dealButton(
+        cheapest.url,
+        "VIEW BEST DEAL"
+      )}
 
     </div>
 
@@ -241,75 +475,189 @@ function displayResults(results) {
     </h2>
 
 
-    ${results.map((product, index) => `
+    <div class="comparison-list">
 
-      <div class="product">
+      ${results.map((product, index) => {
 
-        <div class="product-info">
+        let imageHTML = "";
 
-          ${
-            product.image
-            ? `<img
-                 src="${product.image}"
-                 alt="${product.name}"
-                 class="product-image"
-                 onerror="this.style.display='none'"
-               >`
-            : ""
-          }
 
-          <div>
+        if (product.image) {
 
-            <h3>
-              ${index === 0 ? "🥇 " : ""}
-              ${product.store}
-            </h3>
+          imageHTML = `
 
-            <p>
-              ${product.name}
-            </p>
+            <img
+              src="${escapeHTML(product.image)}"
+              alt="${escapeHTML(product.name)}"
+              class="product-image"
+              onerror="this.style.display='none'"
+            >
 
-            <p>
-              Product:
-              Rs. ${product.price.toLocaleString()}
-            </p>
+          `;
 
-            <p>
-              Shipping:
-              Rs. ${product.shipping.toLocaleString()}
-            </p>
+        }
 
-            <p class="updated">
-              🕐 ${product.lastUpdated}
-            </p>
+
+        return `
+
+          <div class="product">
+
+
+            <div class="product-info">
+
+              ${imageHTML}
+
+
+              <div>
+
+                <h3>
+
+                  ${
+                    index === 0
+                      ? "🥇 "
+                      : ""
+                  }
+
+                  ${escapeHTML(product.store)}
+
+                </h3>
+
+
+                <p>
+                  ${escapeHTML(product.name)}
+                </p>
+
+
+                <p>
+
+                  Product:
+                  Rs. ${formatPrice(product.price)}
+
+                </p>
+
+
+                <p>
+
+                  Shipping:
+                  Rs. ${formatPrice(product.shipping)}
+
+                </p>
+
+
+                <p class="updated">
+
+                  🕐
+                  ${escapeHTML(product.lastUpdated)}
+
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div>
+
+              <strong>
+
+                Rs.
+                ${formatPrice(product.total)}
+
+              </strong>
+
+
+              <br><br>
+
+
+              ${dealButton(
+                product.url,
+                "VIEW"
+              )}
+
+            </div>
+
 
           </div>
 
-        </div>
+        `;
 
+      }).join("")}
 
-        <div>
-
-          <strong>
-            Rs. ${product.total.toLocaleString()}
-          </strong>
-
-          <br><br>
-
-          <a
-            href="${product.url}"
-            target="_blank"
-          >
-            <button>
-              VIEW
-            </button>
-          </a>
-
-        </div>
-
-      </div>
-
-    `).join("")}
+    </div>
 
   `;
+
+}
+
+
+// ==========================================
+// FORMAT PRICE
+// ==========================================
+
+function formatPrice(price) {
+
+  return Number(price || 0)
+    .toLocaleString("en-IN");
+
+}
+
+
+// ==========================================
+// DEAL BUTTON
+// ==========================================
+
+function dealButton(url, text) {
+
+  if (
+    !url ||
+    url === "#" ||
+    url.trim() === ""
+  ) {
+
+    return `
+
+      <button
+        type="button"
+        disabled
+      >
+        ${text}
+      </button>
+
+    `;
+
+  }
+
+
+  return `
+
+    <a
+      href="${escapeHTML(url)}"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+
+      <button type="button">
+        ${text}
+      </button>
+
+    </a>
+
+  `;
+
+}
+
+
+// ==========================================
+// BASIC HTML ESCAPING
+// ==========================================
+
+function escapeHTML(value) {
+
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 }
