@@ -1,0 +1,115 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #222;
+}
+
+header {
+  background: #1769aa;
+  color: white;
+  text-align: center;
+  padding: 35px 15px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+header p {
+  margin-bottom: 0;
+}
+
+main {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 0 15px;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.search-box button {
+  padding: 15px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #1769aa;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#results {
+  margin-top: 30px;
+}
+
+.product {
+  background: white;
+  padding: 18px;
+  margin: 12px 0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.product h3 {
+  margin: 0 0 6px;
+}
+
+.product p {
+  margin: 0;
+  color: #666;
+}
+
+.product strong {
+  font-size: 20px;
+}
+
+.best {
+  border: 3px solid #16a34a;
+}
+
+.badge {
+  background: #16a34a;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+footer {
+  text-align: center;
+  padding: 30px;
+  color: #777;
+}
+
+@media (max-width: 600px) {
+
+  .search-box {
+    flex-direction: column;
+  }
+
+  .product {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+}
