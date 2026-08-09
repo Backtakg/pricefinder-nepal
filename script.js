@@ -20,19 +20,18 @@ fetch("products.csv")
     }
 
     return response.text();
-  })
 
+  })
   .then(csv => {
 
     products = parseCSV(csv);
 
     console.log(
-      "Products loaded:",
+      "CSV products loaded:",
       products.length
     );
 
   })
-
   .catch(error => {
 
     console.error(
@@ -55,6 +54,7 @@ function parseCSV(csv) {
   let value = "";
   let insideQuotes = false;
 
+
   for (
     let i = 0;
     i < csv.length;
@@ -67,6 +67,7 @@ function parseCSV(csv) {
     const nextCharacter =
       csv[i + 1];
 
+
     if (
       character === '"' &&
       insideQuotes &&
@@ -74,6 +75,7 @@ function parseCSV(csv) {
     ) {
 
       value += '"';
+
       i++;
 
     }
@@ -121,6 +123,7 @@ function parseCSV(csv) {
         value.trim()
       );
 
+
       if (
         row.some(
           cell => cell !== ""
@@ -131,7 +134,9 @@ function parseCSV(csv) {
 
       }
 
+
       row = [];
+
       value = "";
 
     }
@@ -153,6 +158,7 @@ function parseCSV(csv) {
     row.push(
       value.trim()
     );
+
 
     if (
       row.some(
@@ -190,6 +196,7 @@ function parseCSV(csv) {
     .map(row => {
 
       const item = {};
+
 
       headers.forEach(
         (header, index) => {
@@ -269,9 +276,9 @@ function parseCSV(csv) {
       };
 
     })
-
     .filter(
-      product => product.name
+      product =>
+        product.name
     );
 
 }
@@ -290,6 +297,10 @@ async function searchProduct() {
 
 
   if (!searchInput) {
+
+    console.error(
+      "Search input not found."
+    );
 
     return;
 
@@ -318,6 +329,7 @@ async function searchProduct() {
 
 
   // Show loading
+
   if (resultsBox) {
 
     resultsBox.innerHTML = `
@@ -329,8 +341,8 @@ async function searchProduct() {
         </h2>
 
         <p>
-          Checking available stores
-          for the best price.
+          Checking live prices from
+          available stores.
         </p>
 
       </div>
@@ -343,7 +355,7 @@ async function searchProduct() {
   try {
 
     console.log(
-      "Searching PriceFinder API:",
+      "Searching live API for:",
       search
     );
 
@@ -359,7 +371,7 @@ async function searchProduct() {
     if (!response.ok) {
 
       throw new Error(
-        "API returned status " +
+        "API error: " +
         response.status
       );
 
@@ -371,7 +383,7 @@ async function searchProduct() {
 
 
     console.log(
-      "API response:",
+      "Live API response:",
       data
     );
 
@@ -390,12 +402,12 @@ async function searchProduct() {
     }
 
 
-    // Convert backend results
-    // into frontend format
+    // ======================================
+    // CONVERT API RESULTS
+    // ======================================
 
-    const apiResults =
+    const liveResults =
       data.results
-
         .map(product => {
 
           const price =
@@ -403,17 +415,24 @@ async function searchProduct() {
               product.price
             ) || 0;
 
+
           const shipping =
             Number(
               product.shipping
             ) || 0;
 
 
+          const totalFromAPI =
+            Number(
+              product.total
+            );
+
+
           return {
 
             name:
               product.name ||
-              "",
+              "Unknown Product",
 
             store:
               product.store ||
@@ -426,8 +445,11 @@ async function searchProduct() {
               shipping,
 
             total:
-              price +
-              shipping,
+              Number.isFinite(
+                totalFromAPI
+              )
+                ? totalFromAPI
+                : price + shipping,
 
             currency:
               product.currency ||
@@ -443,36 +465,34 @@ async function searchProduct() {
 
             image:
               product.image ||
-              "",
-
-            availability:
-              product.availability ||
-              "Check store"
+              ""
 
           };
 
         })
-
         .filter(
           product =>
             product.name
         );
 
 
-    // Display live results
+    console.log(
+      "Live results:",
+      liveResults
+    );
+
+
+    // ======================================
+    // SHOW LIVE RESULTS
+    // ======================================
 
     if (
-      apiResults.length > 0
+      liveResults.length > 0
     ) {
 
       displayResults(
-        apiResults,
+        liveResults,
         true
-      );
-
-      console.log(
-        "Live products found:",
-        apiResults.length
       );
 
       return;
@@ -480,11 +500,9 @@ async function searchProduct() {
     }
 
 
-    // No live products
-    console.log(
-      "No live products found."
-    );
-
+    // ======================================
+    // NO LIVE RESULTS
+    // ======================================
 
     displayNoResults(
       search
@@ -501,7 +519,14 @@ async function searchProduct() {
     );
 
 
-    // Try CSV fallback
+    // ======================================
+    // FALLBACK TO CSV
+    // ======================================
+
+    console.log(
+      "Trying local CSV fallback..."
+    );
+
 
     searchLocalProducts(
       search
@@ -513,7 +538,7 @@ async function searchProduct() {
 
 
 // ==========================================
-// LOCAL CSV FALLBACK
+// LOCAL CSV SEARCH
 // ==========================================
 
 function searchLocalProducts(
@@ -521,8 +546,7 @@ function searchLocalProducts(
 ) {
 
   const searchLower =
-    search
-      .toLowerCase();
+    search.toLowerCase();
 
 
   const searchWords =
@@ -547,8 +571,6 @@ function searchLocalProducts(
         let score = 0;
 
 
-        // Exact match
-
         if (
           productName ===
           searchLower
@@ -558,8 +580,6 @@ function searchLocalProducts(
 
         }
 
-
-        // Full phrase match
 
         if (
           productName.includes(
@@ -571,8 +591,6 @@ function searchLocalProducts(
 
         }
 
-
-        // Individual words
 
         searchWords.forEach(
           word => {
@@ -590,8 +608,6 @@ function searchLocalProducts(
           }
         );
 
-
-        // Starts with search
 
         if (
           productName.startsWith(
@@ -733,7 +749,7 @@ function searchCategory(
 
 
 // ==========================================
-// DISPLAY NO RESULTS
+// NO RESULTS
 // ==========================================
 
 function displayNoResults(
@@ -762,7 +778,7 @@ function displayNoResults(
       </h2>
 
       <p>
-        No live products were found
+        We couldn't find live products
         for
         <strong>
           ${escapeHTML(search)}
@@ -797,38 +813,32 @@ function displayResults(
 
   if (!resultsBox) {
 
+    console.error(
+      "Results container not found."
+    );
+
     return;
 
   }
 
 
   if (
-    !results ||
+    !Array.isArray(results) ||
     results.length === 0
   ) {
 
-    resultsBox.innerHTML = `
-
-      <div class="no-results">
-
-        <h2>
-          🔍 No products found
-        </h2>
-
-        <p>
-          Try another product name.
-        </p>
-
-      </div>
-
-    `;
+    displayNoResults(
+      "your search"
+    );
 
     return;
 
   }
 
 
-  // Calculate totals
+  // ======================================
+  // CALCULATE TOTAL
+  // ======================================
 
   results.forEach(
     product => {
@@ -838,20 +848,34 @@ function displayResults(
           product.price
         ) || 0;
 
+
       product.shipping =
         Number(
           product.shipping
         ) || 0;
 
+
+      const apiTotal =
+        Number(
+          product.total
+        );
+
+
       product.total =
-        product.price +
-        product.shipping;
+        Number.isFinite(
+          apiTotal
+        )
+          ? apiTotal
+          : product.price +
+            product.shipping;
 
     }
   );
 
 
-  // Cheapest first
+  // ======================================
+  // CHEAPEST FIRST
+  // ======================================
 
   results.sort(
     (a, b) =>
@@ -877,6 +901,10 @@ function displayResults(
     highestPrice -
     cheapest.total;
 
+
+  // ======================================
+  // BEST PRODUCT IMAGE
+  // ======================================
 
   let bestImage = "";
 
@@ -905,6 +933,10 @@ function displayResults(
   }
 
 
+  // ======================================
+  // LIVE BADGE
+  // ======================================
+
   const liveBadge =
     liveResults
       ? `
@@ -914,6 +946,10 @@ function displayResults(
       `
       : "";
 
+
+  // ======================================
+  // MAIN RESULTS
+  // ======================================
 
   resultsBox.innerHTML = `
 
@@ -926,11 +962,15 @@ function displayResults(
       ${liveBadge}
 
       <p>
+
         Found
+
         <strong>
           ${results.length}
         </strong>
+
         product${results.length === 1 ? "" : "s"}
+
       </p>
 
     </div>
@@ -940,9 +980,11 @@ function displayResults(
 
       ${bestImage}
 
+
       <span class="badge">
         LOWEST TOTAL PRICE
       </span>
+
 
       <h2>
         ${escapeHTML(
@@ -950,22 +992,31 @@ function displayResults(
         )}
       </h2>
 
+
       <h3>
+
         Rs.
         ${formatPrice(
           cheapest.total
         )}
+
       </h3>
 
+
       <p>
+
         🏪
         ${escapeHTML(
           cheapest.store
         )}
+
       </p>
 
+
       <p>
+
         Product:
+
         Rs.
         ${formatPrice(
           cheapest.price
@@ -974,24 +1025,14 @@ function displayResults(
         <br>
 
         Shipping:
+
         Rs.
         ${formatPrice(
           cheapest.shipping
         )}
+
       </p>
 
-      ${
-        cheapest.availability
-          ? `
-            <p>
-              📦
-              ${escapeHTML(
-                cheapest.availability
-              )}
-            </p>
-          `
-          : ""
-      }
 
       <p class="saving">
 
@@ -1004,6 +1045,7 @@ function displayResults(
 
       </p>
 
+
       <p class="updated">
 
         🕐 Last updated:
@@ -1013,6 +1055,7 @@ function displayResults(
         )}
 
       </p>
+
 
       ${dealButton(
         cheapest.url,
@@ -1036,8 +1079,7 @@ function displayResults(
             index
           ) => {
 
-            let imageHTML =
-              "";
+            let imageHTML = "";
 
 
             if (
@@ -1072,6 +1114,7 @@ function displayResults(
 
                   ${imageHTML}
 
+
                   <div>
 
                     <h3>
@@ -1090,47 +1133,42 @@ function displayResults(
 
 
                     <p>
+
                       ${escapeHTML(
                         product.name
                       )}
+
                     </p>
 
 
                     <p>
+
                       Product:
+
                       Rs.
                       ${formatPrice(
                         product.price
                       )}
+
                     </p>
 
 
                     <p>
+
                       Shipping:
+
                       Rs.
                       ${formatPrice(
                         product.shipping
                       )}
+
                     </p>
-
-
-                    ${
-                      product.availability
-                        ? `
-                          <p>
-                            📦
-                            ${escapeHTML(
-                              product.availability
-                            )}
-                          </p>
-                        `
-                        : ""
-                    }
 
 
                     <p class="updated">
 
                       🕐
+
                       ${escapeHTML(
                         product.lastUpdated
                       )}
@@ -1153,8 +1191,10 @@ function displayResults(
 
                   </strong>
 
+
                   <br>
                   <br>
+
 
                   ${dealButton(
                     product.url,
@@ -1188,9 +1228,10 @@ function formatPrice(
 
   return Number(
     price || 0
-  ).toLocaleString(
-    "en-IN"
-  );
+  )
+    .toLocaleString(
+      "en-IN"
+    );
 
 }
 
@@ -1216,7 +1257,9 @@ function dealButton(
         type="button"
         disabled
       >
+
         ${text}
+
       </button>
 
     `;
@@ -1227,9 +1270,7 @@ function dealButton(
   return `
 
     <a
-      href="${escapeHTML(
-        url
-      )}"
+      href="${escapeHTML(url)}"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -1237,7 +1278,9 @@ function dealButton(
       <button
         type="button"
       >
+
         ${text}
+
       </button>
 
     </a>
