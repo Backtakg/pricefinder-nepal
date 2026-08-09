@@ -93,11 +93,13 @@ function displayResults(results) {
 
       <h2>${cheapest.name}</h2>
 
-      <h3>
-        Rs. ${cheapest.total.toLocaleString()}
-      </h3>
+     <h3>
+  Rs. ${cheapest.total.toLocaleString()}
+</h3>
 
-      <p>
+<p>
+  🏆 Lowest total price
+</p>
         ${cheapest.store}
       </p>
 
