@@ -214,3 +214,65 @@ function displayResults(results) {
 
   `;
 }
+function searchCategory(category) {
+
+  const categoryWords = {
+
+    phone: [
+      "phone",
+      "iphone",
+      "samsung",
+      "xiaomi",
+      "redmi",
+      "oneplus",
+      "pixel"
+    ],
+
+    laptop: [
+      "laptop",
+      "macbook",
+      "dell",
+      "hp",
+      "lenovo",
+      "asus",
+      "acer"
+    ],
+
+    audio: [
+      "headphone",
+      "earphone",
+      "earbuds",
+      "speaker",
+      "sony",
+      "airpods"
+    ],
+
+    tv: [
+      "tv",
+      "television",
+      "smart tv"
+    ],
+
+    electronics: [
+      "camera",
+      "monitor",
+      "tablet",
+      "watch"
+    ]
+
+  };
+
+  const words = categoryWords[category];
+
+  const results = products.filter(product => {
+
+    const name = product.name.toLowerCase();
+
+    return words.some(word =>
+      name.includes(word)
+    );
+
+  });
+
+  displayResults(results);
+}
