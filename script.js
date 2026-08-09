@@ -2,7 +2,7 @@
 // PRICEFINDER NEPAL — GEN Z FRONTEND
 // ==========================================================
 
-const API_URL = "https://pricfinder-nepal.onrender.com/api/search";
+const API_URL = "https://pricefinder-backend.onrender.com/api/search";
 const CSV_URL = "products.csv";
 
 let lastResults = [];
