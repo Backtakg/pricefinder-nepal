@@ -15,7 +15,6 @@ fetch("products.csv")
   })
   .then(csv => {
     products = parseCSV(csv);
-
     console.log("Products loaded:", products);
   })
   .catch(error => {
@@ -27,7 +26,7 @@ fetch("products.csv")
       resultsBox.innerHTML = `
         <div class="error-message">
           <h2>⚠️ Unable to load products</h2>
-          <p>Please try refreshing the page.</p>
+          <p>Please refresh the page and try again.</p>
         </div>
       `;
     }
@@ -50,7 +49,11 @@ function parseCSV(csv) {
     const character = csv[i];
     const nextCharacter = csv[i + 1];
 
-    if (character === '"' && insideQuotes && nextCharacter === '"') {
+    if (
+      character === '"' &&
+      insideQuotes &&
+      nextCharacter === '"'
+    ) {
 
       value += '"';
       i++;
@@ -59,7 +62,10 @@ function parseCSV(csv) {
 
       insideQuotes = !insideQuotes;
 
-    } else if (character === "," && !insideQuotes) {
+    } else if (
+      character === "," &&
+      !insideQuotes
+    ) {
 
       row.push(value.trim());
       value = "";
@@ -69,7 +75,10 @@ function parseCSV(csv) {
       !insideQuotes
     ) {
 
-      if (character === "\r" && nextCharacter === "\n") {
+      if (
+        character === "\r" &&
+        nextCharacter === "\n"
+      ) {
         i++;
       }
 
@@ -90,7 +99,6 @@ function parseCSV(csv) {
   }
 
 
-  // Add final row
   if (value !== "" || row.length > 0) {
 
     row.push(value.trim());
@@ -173,7 +181,7 @@ function parseCSV(csv) {
 
 
 // ==========================================
-// SEARCH PRODUCT
+// SMART SEARCH
 // ==========================================
 
 function searchProduct() {
@@ -183,13 +191,14 @@ function searchProduct() {
 
 
   if (!searchInput) {
-    console.error("Search input not found.");
     return;
   }
 
 
   const search =
-    searchInput.value.trim().toLowerCase();
+    searchInput.value
+      .trim()
+      .toLowerCase();
 
 
   if (!search) {
@@ -200,11 +209,74 @@ function searchProduct() {
   }
 
 
-  const results = products.filter(product =>
-    product.name
-      .toLowerCase()
-      .includes(search)
-  );
+  /*
+    Break the search into individual words.
+
+    Example:
+
+    "Samsung S25"
+
+    becomes:
+
+    ["samsung", "s25"]
+  */
+
+  const searchWords =
+    search
+      .split(/\s+/)
+      .filter(word => word.length > 0);
+
+
+  const results =
+    products
+      .map(product => {
+
+        const productName =
+          product.name.toLowerCase();
+
+
+        let score = 0;
+
+
+        // Exact match
+        if (productName === search) {
+          score += 100;
+        }
+
+
+        // Full phrase match
+        if (productName.includes(search)) {
+          score += 50;
+        }
+
+
+        // Individual word matches
+        searchWords.forEach(word => {
+
+          if (productName.includes(word)) {
+            score += 20;
+          }
+
+        });
+
+
+        // Starts with search
+        if (productName.startsWith(search)) {
+          score += 30;
+        }
+
+
+        return {
+          product,
+          score
+        };
+
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) =>
+        b.score - a.score
+      )
+      .map(item => item.product);
 
 
   displayResults(results);
@@ -272,17 +344,18 @@ function searchCategory(category) {
     categoryWords[category] || [];
 
 
-  const results = products.filter(product => {
+  const results =
+    products.filter(product => {
 
-    const name =
-      product.name.toLowerCase();
+      const name =
+        product.name.toLowerCase();
 
 
-    return words.some(word =>
-      name.includes(word)
-    );
+      return words.some(word =>
+        name.includes(word)
+      );
 
-  });
+    });
 
 
   displayResults(results);
@@ -300,14 +373,9 @@ function displayResults(results) {
 
 
   if (!resultsBox) {
-    console.error("Results container not found.");
     return;
   }
 
-
-  // ----------------------------------------
-  // NO RESULTS
-  // ----------------------------------------
 
   if (results.length === 0) {
 
@@ -318,7 +386,7 @@ function displayResults(results) {
         <h2>🔍 No products found</h2>
 
         <p>
-          Try another product or category.
+          Try another product name.
         </p>
 
       </div>
@@ -329,9 +397,7 @@ function displayResults(results) {
   }
 
 
-  // ----------------------------------------
-  // CALCULATE TOTAL PRICE
-  // ----------------------------------------
+  // Calculate total prices
 
   results.forEach(product => {
 
@@ -342,9 +408,7 @@ function displayResults(results) {
   });
 
 
-  // ----------------------------------------
-  // CHEAPEST FIRST
-  // ----------------------------------------
+  // Cheapest first
 
   results.sort((a, b) =>
     a.total - b.total
@@ -355,10 +419,6 @@ function displayResults(results) {
     results[0];
 
 
-  // ----------------------------------------
-  // HIGHEST PRICE
-  // ----------------------------------------
-
   const highestPrice =
     Math.max(
       ...results.map(product =>
@@ -367,18 +427,10 @@ function displayResults(results) {
     );
 
 
-  // ----------------------------------------
-  // SAVINGS
-  // ----------------------------------------
-
   const savings =
     highestPrice -
     cheapest.total;
 
-
-  // ----------------------------------------
-  // BEST PRODUCT IMAGE
-  // ----------------------------------------
 
   let bestImage = "";
 
@@ -399,42 +451,31 @@ function displayResults(results) {
   }
 
 
-  // ----------------------------------------
-  // BEST DEAL
-  // ----------------------------------------
-
   resultsBox.innerHTML = `
 
     <h2>🥇 Best Price</h2>
-
 
     <div class="best-price">
 
       ${bestImage}
 
-
       <span class="badge">
         LOWEST TOTAL PRICE
       </span>
-
 
       <h2>
         ${escapeHTML(cheapest.name)}
       </h2>
 
-
       <h3>
         Rs. ${formatPrice(cheapest.total)}
       </h3>
-
 
       <p>
         🏪 ${escapeHTML(cheapest.store)}
       </p>
 
-
       <p>
-
         Product:
         Rs. ${formatPrice(cheapest.price)}
 
@@ -442,9 +483,7 @@ function displayResults(results) {
 
         Shipping:
         Rs. ${formatPrice(cheapest.shipping)}
-
       </p>
-
 
       <p class="saving">
 
@@ -453,14 +492,12 @@ function displayResults(results) {
 
       </p>
 
-
       <p class="updated">
 
         🕐 Last updated:
         ${escapeHTML(cheapest.lastUpdated)}
 
       </p>
-
 
       ${dealButton(
         cheapest.url,
@@ -502,11 +539,9 @@ function displayResults(results) {
 
           <div class="product">
 
-
             <div class="product-info">
 
               ${imageHTML}
-
 
               <div>
 
@@ -522,27 +557,19 @@ function displayResults(results) {
 
                 </h3>
 
-
                 <p>
                   ${escapeHTML(product.name)}
                 </p>
 
-
                 <p>
-
                   Product:
                   Rs. ${formatPrice(product.price)}
-
                 </p>
-
 
                 <p>
-
                   Shipping:
                   Rs. ${formatPrice(product.shipping)}
-
                 </p>
-
 
                 <p class="updated">
 
@@ -559,15 +586,10 @@ function displayResults(results) {
             <div>
 
               <strong>
-
-                Rs.
-                ${formatPrice(product.total)}
-
+                Rs. ${formatPrice(product.total)}
               </strong>
 
-
               <br><br>
-
 
               ${dealButton(
                 product.url,
@@ -575,7 +597,6 @@ function displayResults(results) {
               )}
 
             </div>
-
 
           </div>
 
@@ -591,7 +612,7 @@ function displayResults(results) {
 
 
 // ==========================================
-// FORMAT PRICE
+// PRICE FORMAT
 // ==========================================
 
 function formatPrice(price) {
@@ -648,7 +669,7 @@ function dealButton(url, text) {
 
 
 // ==========================================
-// BASIC HTML ESCAPING
+// ESCAPE HTML
 // ==========================================
 
 function escapeHTML(value) {
