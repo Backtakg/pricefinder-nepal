@@ -1,1330 +1,940 @@
-let products = [];
+// ==========================================================
+// PRICEFINDER NEPAL — GEN Z FRONTEND
+// ==========================================================
 
-// ==========================================
-// PRICEFINDER BACKEND API
-// ==========================================
+const API_URL = "https://pricfinder-nepal.onrender.com/api/search";
+const CSV_URL = "products.csv";
 
-const API_URL =
-  "https://pricefinder-backend.onrender.com/api/search";
+let lastResults = [];
 
+// ==========================================================
+// SEARCH
+// ==========================================================
 
-// ==========================================
-// LOAD PRODUCTS FROM CSV
-// ==========================================
+async function searchProduct() {
+  const input = document.getElementById("searchInput");
+  const results = document.getElementById("results");
 
-fetch("products.csv")
-  .then(response => {
+  if (!input || !results) return;
+
+  const query = String(input.value || "").trim();
+
+  if (!query) {
+    showMessage(
+      "Type a product first 👀",
+      "Try iPhone, laptop, headphones or tripod."
+    );
+    return;
+  }
+
+  setLoading(results, query);
+
+  try {
+    const response = await fetch(
+      `${API_URL}?q=${encodeURIComponent(query)}`
+    );
 
     if (!response.ok) {
-      throw new Error("Could not load products.csv");
+      throw new Error(`API returned ${response.status}`);
     }
 
-    return response.text();
+    const data = await response.json();
 
-  })
-  .then(csv => {
+    if (data?.success && Array.isArray(data.results)) {
+      const liveResults = normalizeResults(data.results);
 
-    products = parseCSV(csv);
-
-    console.log(
-      "CSV products loaded:",
-      products.length
-    );
-
-  })
-  .catch(error => {
-
-    console.error(
-      "CSV loading error:",
-      error
-    );
-
-  });
-
-
-// ==========================================
-// CSV PARSER
-// ==========================================
-
-function parseCSV(csv) {
-
-  const rows = [];
-
-  let row = [];
-  let value = "";
-  let insideQuotes = false;
-
-
-  for (
-    let i = 0;
-    i < csv.length;
-    i++
-  ) {
-
-    const character =
-      csv[i];
-
-    const nextCharacter =
-      csv[i + 1];
-
-
-    if (
-      character === '"' &&
-      insideQuotes &&
-      nextCharacter === '"'
-    ) {
-
-      value += '"';
-
-      i++;
-
+      if (liveResults.length) {
+        lastResults = liveResults;
+        renderResults(liveResults, query);
+        return;
+      }
     }
 
-    else if (
-      character === '"'
-    ) {
+    const fallback = await searchCSV(query);
 
-      insideQuotes =
-        !insideQuotes;
-
+    if (fallback.length) {
+      lastResults = fallback;
+      renderResults(fallback, query, true);
+      return;
     }
 
-    else if (
-      character === "," &&
-      !insideQuotes
-    ) {
+    showNoResults(query);
 
-      row.push(
-        value.trim()
-      );
+  } catch (error) {
+    console.error("Search error:", error);
 
-      value = "";
+    try {
+      const fallback = await searchCSV(query);
 
-    }
-
-    else if (
-      (
-        character === "\n" ||
-        character === "\r"
-      ) &&
-      !insideQuotes
-    ) {
-
-      if (
-        character === "\r" &&
-        nextCharacter === "\n"
-      ) {
-
-        i++;
-
+      if (fallback.length) {
+        lastResults = fallback;
+        renderResults(fallback, query, true);
+      } else {
+        showMessage(
+          "Couldn't fetch live prices 😵",
+          "The store servers may be temporarily unavailable."
+        );
       }
 
-      row.push(
-        value.trim()
+    } catch (fallbackError) {
+      console.error("CSV fallback error:", fallbackError);
+
+      showMessage(
+        "Something went wrong 😵",
+        "Please try again."
       );
-
-
-      if (
-        row.some(
-          cell => cell !== ""
-        )
-      ) {
-
-        rows.push(row);
-
-      }
-
-
-      row = [];
-
-      value = "";
-
     }
-
-    else {
-
-      value += character;
-
-    }
-
   }
-
-
-  if (
-    value !== "" ||
-    row.length > 0
-  ) {
-
-    row.push(
-      value.trim()
-    );
-
-
-    if (
-      row.some(
-        cell => cell !== ""
-      )
-    ) {
-
-      rows.push(row);
-
-    }
-
-  }
-
-
-  if (
-    rows.length < 2
-  ) {
-
-    return [];
-
-  }
-
-
-  const headers =
-    rows[0].map(
-      header =>
-        header
-          .trim()
-          .toLowerCase()
-    );
-
-
-  return rows
-    .slice(1)
-    .map(row => {
-
-      const item = {};
-
-
-      headers.forEach(
-        (header, index) => {
-
-          item[header] =
-            row[index] || "";
-
-        }
-      );
-
-
-      return {
-
-        name:
-          item["product"] ||
-          item["name"] ||
-          "",
-
-        store:
-          item["store"] ||
-          "",
-
-        price:
-          Number(
-            String(
-              item["price"] ||
-              "0"
-            )
-              .replace(/,/g, "")
-              .replace(
-                /rs\.?/gi,
-                ""
-              )
-              .replace(
-                /₨/g,
-                ""
-              )
-              .trim()
-          ) || 0,
-
-        shipping:
-          Number(
-            String(
-              item["shipping"] ||
-              "0"
-            )
-              .replace(/,/g, "")
-              .replace(
-                /rs\.?/gi,
-                ""
-              )
-              .replace(
-                /₨/g,
-                ""
-              )
-              .trim()
-          ) || 0,
-
-        currency:
-          item["currency"] ||
-          "NPR",
-
-        url:
-          item["product url"] ||
-          item["url"] ||
-          "#",
-
-        lastUpdated:
-          item["last updated"] ||
-          "Not provided",
-
-        image:
-          item["image url"] ||
-          item["image"] ||
-          ""
-
-      };
-
-    })
-    .filter(
-      product =>
-        product.name
-    );
-
 }
 
 
-// ==========================================
-// SMART SEARCH - LIVE API
-// ==========================================
+// ==========================================================
+// CATEGORY SEARCH
+// ==========================================================
 
-async function searchProduct() {
+function searchCategory(category) {
+  const input = document.getElementById("searchInput");
 
-  const searchInput =
-    document.getElementById(
-      "searchInput"
-    );
+  if (!input) return;
+
+  input.value = category;
+  searchProduct();
+}
 
 
-  if (!searchInput) {
+// ==========================================================
+// CSV FALLBACK
+// ==========================================================
 
-    console.error(
-      "Search input not found."
-    );
+async function searchCSV(query) {
+  const response = await fetch(
+    CSV_URL,
+    { cache: "no-store" }
+  );
 
-    return;
-
+  if (!response.ok) {
+    throw new Error(`CSV returned ${response.status}`);
   }
 
+  const text = await response.text();
+  const rows = parseCSV(text);
 
-  const search =
-    searchInput.value.trim();
+  const search = query.toLowerCase().trim();
+
+  return rows
+    .filter(product => {
+      const searchable = [
+        product.name,
+        product.store,
+        product.category
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchable.includes(search);
+    })
+    .map(normalizeProduct)
+    .filter(product => product.name)
+    .sort((a, b) => a.total - b.total);
+}
 
 
-  if (!search) {
+// ==========================================================
+// CSV PARSER
+// ==========================================================
 
-    alert(
-      "Please enter a product name."
-    );
+function parseCSV(text) {
+  const lines = [];
+  let current = "";
+  let insideQuotes = false;
 
-    return;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
 
+    if (char === '"' && insideQuotes && next === '"') {
+      current += '"';
+      i++;
+      continue;
+    }
+
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+      current += char;
+      continue;
+    }
+
+    if (
+      (char === "\n" || char === "\r") &&
+      !insideQuotes
+    ) {
+      if (current.trim()) {
+        lines.push(current);
+      }
+
+      current = "";
+      continue;
+    }
+
+    current += char;
   }
 
+  if (current.trim()) {
+    lines.push(current);
+  }
 
-  const resultsBox =
-    document.getElementById(
-      "results"
-    );
+  if (!lines.length) return [];
+
+  const headers = parseCSVLine(lines[0]);
+
+  return lines.slice(1).map(line => {
+    const values = parseCSVLine(line);
+    const object = {};
+
+    headers.forEach((header, index) => {
+      object[header] = values[index] || "";
+    });
+
+    return object;
+  });
+}
 
 
-  // Show loading
+function parseCSVLine(line) {
+  const values = [];
+  let value = "";
+  let insideQuotes = false;
 
-  if (resultsBox) {
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
 
-    resultsBox.innerHTML = `
+    if (
+      char === '"' &&
+      insideQuotes &&
+      next === '"'
+    ) {
+      value += '"';
+      i++;
+      continue;
+    }
 
-      <div class="loading-message">
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+      continue;
+    }
+
+    if (char === "," && !insideQuotes) {
+      values.push(value.trim());
+      value = "";
+      continue;
+    }
+
+    value += char;
+  }
+
+  values.push(value.trim());
+
+  return values;
+}
+
+
+// ==========================================================
+// NORMALIZATION
+// ==========================================================
+
+function normalizeResults(results) {
+  return results
+    .map(normalizeProduct)
+    .filter(product => product.name)
+    .sort((a, b) => a.total - b.total);
+}
+
+
+function normalizeProduct(product) {
+  const price = toNumber(
+    product.price ??
+    product.productPrice ??
+    product.amount
+  );
+
+  const shipping = toNumber(
+    product.shipping ??
+    product.delivery ??
+    0
+  );
+
+  const suppliedTotal = toNumber(
+    product.total
+  );
+
+  const total =
+    suppliedTotal > 0
+      ? suppliedTotal
+      : price + shipping;
+
+  return {
+    name: String(
+      product.name || ""
+    ).trim(),
+
+    store: String(
+      product.store ||
+      product.source ||
+      "Unknown Store"
+    ).trim(),
+
+    price,
+    shipping,
+    total,
+
+    availability: String(
+      product.availability ||
+      product.stock ||
+      "Check store"
+    ).trim(),
+
+    url: String(
+      product.url ||
+      product.link ||
+      "#"
+    ).trim(),
+
+    image: String(
+      product.image ||
+      product.imageUrl ||
+      ""
+    ).trim(),
+
+    source: String(
+      product.source ||
+      product.store ||
+      ""
+    ).trim(),
+
+    lastUpdated: String(
+      product.lastUpdated ||
+      "Recently"
+    ).trim()
+  };
+}
+
+
+function toNumber(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value)
+      ? value
+      : 0;
+  }
+
+  const number = Number(
+    String(value ?? "")
+      .replace(/[^\d.-]/g, "")
+  );
+
+  return Number.isFinite(number)
+    ? number
+    : 0;
+}
+
+
+// ==========================================================
+// RENDER RESULTS
+// ==========================================================
+
+function renderResults(
+  results,
+  query,
+  fromCSV = false
+) {
+  const container =
+    document.getElementById("results");
+
+  if (!container) return;
+
+  const sorted = [...results]
+    .sort((a, b) => a.total - b.total);
+
+  const cheapest = sorted[0];
+
+  const highest =
+    sorted[sorted.length - 1];
+
+  const savings =
+    sorted.length > 1
+      ? Math.max(
+          0,
+          highest.total - cheapest.total
+        )
+      : 0;
+
+  const storeCount =
+    new Set(
+      sorted.map(item => item.store)
+    ).size;
+
+  container.innerHTML = `
+
+    <div class="results-header">
+
+      <div>
+
+        <div class="results-kicker">
+
+          <span class="live-dot"></span>
+
+          ${
+            fromCSV
+              ? "FALLBACK RESULTS"
+              : "LIVE PRICE CHECK"
+          }
+
+        </div>
 
         <h2>
-          🔎 Searching...
+          Results for
+          <strong>
+            “${escapeHTML(query)}”
+          </strong>
         </h2>
 
         <p>
-          Checking live prices from
-          available stores.
+          ${sorted.length}
+          ${sorted.length === 1 ? "deal" : "deals"}
+          found across
+          ${storeCount}
+          ${storeCount === 1 ? "store" : "stores"}.
         </p>
 
       </div>
 
-    `;
+      <div class="results-count">
 
-  }
+        ${sorted.length}
 
+        <small>
+          DEALS
+        </small>
 
-  try {
+      </div>
 
-    console.log(
-      "Searching live API for:",
-      search
-    );
+    </div>
 
 
-    const response =
-      await fetch(
-        API_URL +
-        "?q=" +
-        encodeURIComponent(search)
-      );
+    <!-- BEST DEAL -->
 
+    <article class="best-price-card">
 
-    if (!response.ok) {
+      <div class="best-deal-badge">
+        ⚡ BEST DEAL
+      </div>
 
-      throw new Error(
-        "API error: " +
-        response.status
-      );
+      <div class="best-price-grid">
 
-    }
+        <div class="best-product-image">
 
+          ${
+            getImageHTML(cheapest) ||
+            `<div class="image-placeholder">₨</div>`
+          }
 
-    const data =
-      await response.json();
+        </div>
 
 
-    console.log(
-      "Live API response:",
-      data
-    );
+        <div class="best-product-info">
 
+          <div class="store-chip">
 
-    if (
-      !data.success ||
-      !Array.isArray(
-        data.results
-      )
-    ) {
+            🏪
+            ${escapeHTML(cheapest.store)}
 
-      throw new Error(
-        "Invalid API response"
-      );
+          </div>
 
-    }
 
+          <h3>
+            ${escapeHTML(cheapest.name)}
+          </h3>
 
-    // ======================================
-    // CONVERT API RESULTS
-    // ======================================
 
-    const liveResults =
-      data.results
-        .map(product => {
+          <div class="best-price-row">
 
-          const price =
-            Number(
-              product.price
-            ) || 0;
+            <div>
 
+              <span class="price-label">
+                LOWEST TOTAL
+              </span>
 
-          const shipping =
-            Number(
-              product.shipping
-            ) || 0;
+              <div class="best-price">
+                Rs. ${formatPrice(cheapest.total)}
+              </div>
 
+            </div>
 
-          const totalFromAPI =
-            Number(
-              product.total
-            );
 
-
-          return {
-
-            name:
-              product.name ||
-              "Unknown Product",
-
-            store:
-              product.store ||
-              "Unknown Store",
-
-            price:
-              price,
-
-            shipping:
-              shipping,
-
-            total:
-              Number.isFinite(
-                totalFromAPI
-              )
-                ? totalFromAPI
-                : price + shipping,
-
-            currency:
-              product.currency ||
-              "NPR",
-
-            url:
-              product.url ||
-              "#",
-
-            lastUpdated:
-              product.lastUpdated ||
-              "Live data",
-
-            image:
-              product.image ||
-              ""
-
-          };
-
-        })
-        .filter(
-          product =>
-            product.name
-        );
-
-
-    console.log(
-      "Live results:",
-      liveResults
-    );
-
-
-    // ======================================
-    // SHOW LIVE RESULTS
-    // ======================================
-
-    if (
-      liveResults.length > 0
-    ) {
-
-      displayResults(
-        liveResults,
-        true
-      );
-
-      return;
-
-    }
-
-
-    // ======================================
-    // NO LIVE RESULTS
-    // ======================================
-
-    displayNoResults(
-      search
-    );
-
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Live API search failed:",
-      error
-    );
-
-
-    // ======================================
-    // FALLBACK TO CSV
-    // ======================================
-
-    console.log(
-      "Trying local CSV fallback..."
-    );
-
-
-    searchLocalProducts(
-      search
-    );
-
-  }
-
-}
-
-
-// ==========================================
-// LOCAL CSV SEARCH
-// ==========================================
-
-function searchLocalProducts(
-  search
-) {
-
-  const searchLower =
-    search.toLowerCase();
-
-
-  const searchWords =
-    searchLower
-      .split(/\s+/)
-      .filter(
-        word =>
-          word.length > 0
-      );
-
-
-  const results =
-    products
-
-      .map(product => {
-
-        const productName =
-          product.name
-            .toLowerCase();
-
-
-        let score = 0;
-
-
-        if (
-          productName ===
-          searchLower
-        ) {
-
-          score += 100;
-
-        }
-
-
-        if (
-          productName.includes(
-            searchLower
-          )
-        ) {
-
-          score += 50;
-
-        }
-
-
-        searchWords.forEach(
-          word => {
-
-            if (
-              productName.includes(
-                word
-              )
-            ) {
-
-              score += 20;
-
+            ${
+              savings > 0
+                ? `
+                  <div class="savings-pill">
+                    SAVE Rs. ${formatPrice(savings)}
+                  </div>
+                `
+                : ""
             }
 
-          }
-        );
-
-
-        if (
-          productName.startsWith(
-            searchLower
-          )
-        ) {
-
-          score += 30;
+          </div>
 
-        }
-
-
-        return {
 
-          product:
-            product,
+          <div class="deal-meta">
 
-          score:
-            score
+            <span>
+              🚚 Shipping:
+              Rs. ${formatPrice(cheapest.shipping)}
+            </span>
 
-        };
+            <span>
+              📦
+              ${escapeHTML(
+                cheapest.availability
+              )}
+            </span>
 
-      })
+          </div>
 
-      .filter(
-        item =>
-          item.score > 0
-      )
 
-      .sort(
-        (a, b) =>
-          b.score -
-          a.score
-      )
+          <div class="best-deal-actions">
 
-      .map(
-        item =>
-          item.product
-      );
+            ${dealButton(
+              cheapest.url,
+              "GET THIS DEAL ↗",
+              "primary-deal-button"
+            )}
 
+          </div>
 
-  displayResults(
-    results,
-    false
-  );
+        </div>
 
-}
+      </div>
 
+    </article>
 
-// ==========================================
-// CATEGORY SEARCH
-// ==========================================
 
-function searchCategory(
-  category
-) {
+    <!-- COMPARISON -->
 
-  const categoryWords = {
+    <div class="comparison-heading">
 
-    phone: [
-      "phone",
-      "iphone",
-      "samsung",
-      "xiaomi",
-      "redmi",
-      "oneplus",
-      "pixel"
-    ],
+      <div>
 
-    laptop: [
-      "laptop",
-      "macbook",
-      "dell",
-      "hp",
-      "lenovo",
-      "asus",
-      "acer"
-    ],
+        <div class="section-label">
+          PRICE CHECK
+        </div>
 
-    audio: [
-      "headphone",
-      "headphones",
-      "earphone",
-      "earphones",
-      "earbuds",
-      "speaker",
-      "speakers",
-      "sony",
-      "airpods"
-    ],
+        <h2>
+          Compare all stores
+        </h2>
 
-    tv: [
-      "tv",
-      "television",
-      "smart tv"
-    ],
+      </div>
 
-    electronics: [
-      "camera",
-      "monitor",
-      "tablet",
-      "watch",
-      "electronics"
-    ]
+      <span class="store-count">
 
-  };
+        ${storeCount}
+        ${storeCount === 1 ? "store" : "stores"}
 
-
-  const words =
-    categoryWords[
-      category
-    ] || [];
-
-
-  const results =
-    products.filter(
-      product => {
-
-        const name =
-          product.name
-            .toLowerCase();
-
-
-        return words.some(
-          word =>
-            name.includes(word)
-        );
-
-      }
-    );
-
-
-  displayResults(
-    results,
-    false
-  );
-
-}
-
-
-// ==========================================
-// NO RESULTS
-// ==========================================
-
-function displayNoResults(
-  search
-) {
-
-  const resultsBox =
-    document.getElementById(
-      "results"
-    );
-
-
-  if (!resultsBox) {
-
-    return;
-
-  }
-
-
-  resultsBox.innerHTML = `
-
-    <div class="no-results">
-
-      <h2>
-        🔍 No products found
-      </h2>
-
-      <p>
-        We couldn't find live products
-        for
-        <strong>
-          ${escapeHTML(search)}
-        </strong>.
-      </p>
-
-      <p>
-        Try another product name.
-      </p>
-
-    </div>
-
-  `;
-
-}
-
-
-// ==========================================
-// DISPLAY RESULTS
-// ==========================================
-
-function displayResults(
-  results,
-  liveResults = false
-) {
-
-  const resultsBox =
-    document.getElementById(
-      "results"
-    );
-
-
-  if (!resultsBox) {
-
-    console.error(
-      "Results container not found."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !Array.isArray(results) ||
-    results.length === 0
-  ) {
-
-    displayNoResults(
-      "your search"
-    );
-
-    return;
-
-  }
-
-
-  // ======================================
-  // CALCULATE TOTAL
-  // ======================================
-
-  results.forEach(
-    product => {
-
-      product.price =
-        Number(
-          product.price
-        ) || 0;
-
-
-      product.shipping =
-        Number(
-          product.shipping
-        ) || 0;
-
-
-      const apiTotal =
-        Number(
-          product.total
-        );
-
-
-      product.total =
-        Number.isFinite(
-          apiTotal
-        )
-          ? apiTotal
-          : product.price +
-            product.shipping;
-
-    }
-  );
-
-
-  // ======================================
-  // CHEAPEST FIRST
-  // ======================================
-
-  results.sort(
-    (a, b) =>
-      a.total -
-      b.total
-  );
-
-
-  const cheapest =
-    results[0];
-
-
-  const highestPrice =
-    Math.max(
-      ...results.map(
-        product =>
-          product.total
-      )
-    );
-
-
-  const savings =
-    highestPrice -
-    cheapest.total;
-
-
-  // ======================================
-  // BEST PRODUCT IMAGE
-  // ======================================
-
-  let bestImage = "";
-
-
-  if (
-    cheapest.image
-  ) {
-
-    bestImage = `
-
-      <img
-        src="${escapeHTML(
-          cheapest.image
-        )}"
-        alt="${escapeHTML(
-          cheapest.name
-        )}"
-        class="best-product-image"
-        onerror="
-          this.style.display='none'
-        "
-      >
-
-    `;
-
-  }
-
-
-  // ======================================
-  // LIVE BADGE
-  // ======================================
-
-  const liveBadge =
-    liveResults
-      ? `
-        <span class="live-badge">
-          🟢 LIVE
-        </span>
-      `
-      : "";
-
-
-  // ======================================
-  // MAIN RESULTS
-  // ======================================
-
-  resultsBox.innerHTML = `
-
-    <div class="results-header">
-
-      <h2>
-        🥇 Best Price
-      </h2>
-
-      ${liveBadge}
-
-      <p>
-
-        Found
-
-        <strong>
-          ${results.length}
-        </strong>
-
-        product${results.length === 1 ? "" : "s"}
-
-      </p>
-
-    </div>
-
-
-    <div class="best-price">
-
-      ${bestImage}
-
-
-      <span class="badge">
-        LOWEST TOTAL PRICE
       </span>
 
-
-      <h2>
-        ${escapeHTML(
-          cheapest.name
-        )}
-      </h2>
-
-
-      <h3>
-
-        Rs.
-        ${formatPrice(
-          cheapest.total
-        )}
-
-      </h3>
-
-
-      <p>
-
-        🏪
-        ${escapeHTML(
-          cheapest.store
-        )}
-
-      </p>
-
-
-      <p>
-
-        Product:
-
-        Rs.
-        ${formatPrice(
-          cheapest.price
-        )}
-
-        <br>
-
-        Shipping:
-
-        Rs.
-        ${formatPrice(
-          cheapest.shipping
-        )}
-
-      </p>
-
-
-      <p class="saving">
-
-        💰 You save
-
-        Rs.
-        ${formatPrice(
-          savings
-        )}
-
-      </p>
-
-
-      <p class="updated">
-
-        🕐 Last updated:
-
-        ${escapeHTML(
-          cheapest.lastUpdated
-        )}
-
-      </p>
-
-
-      ${dealButton(
-        cheapest.url,
-        "VIEW BEST DEAL"
-      )}
-
     </div>
-
-
-    <h2>
-      Compare All Stores
-    </h2>
 
 
     <div class="comparison-list">
 
-      ${results
+      ${sorted
         .map(
-          (
-            product,
-            index
-          ) => {
-
-            let imageHTML = "";
-
-
-            if (
-              product.image
-            ) {
-
-              imageHTML = `
-
-                <img
-                  src="${escapeHTML(
-                    product.image
-                  )}"
-                  alt="${escapeHTML(
-                    product.name
-                  )}"
-                  class="product-image"
-                  onerror="
-                    this.style.display='none'
-                  "
-                >
-
-              `;
-
-            }
-
-
-            return `
-
-              <div class="product">
-
-                <div class="product-info">
-
-                  ${imageHTML}
-
-
-                  <div>
-
-                    <h3>
-
-                      ${
-                        index === 0
-                          ? "🥇 "
-                          : ""
-                      }
-
-                      ${escapeHTML(
-                        product.store
-                      )}
-
-                    </h3>
-
-
-                    <p>
-
-                      ${escapeHTML(
-                        product.name
-                      )}
-
-                    </p>
-
-
-                    <p>
-
-                      Product:
-
-                      Rs.
-                      ${formatPrice(
-                        product.price
-                      )}
-
-                    </p>
-
-
-                    <p>
-
-                      Shipping:
-
-                      Rs.
-                      ${formatPrice(
-                        product.shipping
-                      )}
-
-                    </p>
-
-
-                    <p class="updated">
-
-                      🕐
-
-                      ${escapeHTML(
-                        product.lastUpdated
-                      )}
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-
-                <div>
-
-                  <strong>
-
-                    Rs.
-                    ${formatPrice(
-                      product.total
-                    )}
-
-                  </strong>
-
-
-                  <br>
-                  <br>
-
-
-                  ${dealButton(
-                    product.url,
-                    "VIEW"
-                  )}
-
-                </div>
-
-              </div>
-
-            `;
-
-          }
+          (product, index) =>
+            renderProductCard(
+              product,
+              index,
+              cheapest
+            )
         )
         .join("")}
 
     </div>
 
+
+    <div class="results-footnote">
+
+      <span>⚡</span>
+
+      Prices can change.
+      Always confirm the final price
+      and availability at the store.
+
+    </div>
+
   `;
-
 }
 
 
-// ==========================================
-// PRICE FORMAT
-// ==========================================
+// ==========================================================
+// PRODUCT CARD
+// ==========================================================
 
-function formatPrice(
-  price
+function renderProductCard(
+  product,
+  index,
+  cheapest
 ) {
+  const isBest =
+    index === 0 ||
+    product.total === cheapest.total;
 
-  return Number(
-    price || 0
-  )
-    .toLocaleString(
-      "en-IN"
+  const difference =
+    Math.max(
+      0,
+      product.total - cheapest.total
     );
-
-}
-
-
-// ==========================================
-// DEAL BUTTON
-// ==========================================
-
-function dealButton(
-  url,
-  text
-) {
-
-  if (
-    !url ||
-    url === "#" ||
-    url.trim() === ""
-  ) {
-
-    return `
-
-      <button
-        type="button"
-        disabled
-      >
-
-        ${text}
-
-      </button>
-
-    `;
-
-  }
-
 
   return `
 
+    <article class="
+      comparison-card
+      ${isBest ? "is-best" : ""}
+    ">
+
+      <div class="rank-number">
+        ${index + 1}
+      </div>
+
+
+      <div class="comparison-image">
+
+        ${
+          getImageHTML(product) ||
+          `<div class="image-placeholder small">₨</div>`
+        }
+
+      </div>
+
+
+      <div class="comparison-info">
+
+        <div class="store-line">
+
+          <span class="store-name">
+            ${escapeHTML(product.store)}
+          </span>
+
+          ${
+            isBest
+              ? `
+                <span class="best-mini-badge">
+                  BEST PRICE
+                </span>
+              `
+              : ""
+          }
+
+        </div>
+
+
+        <h3>
+          ${escapeHTML(product.name)}
+        </h3>
+
+
+        <div class="availability">
+
+          <span class="${
+            isAvailable(
+              product.availability
+            )
+              ? "available"
+              : "check-stock"
+          }">
+            ●
+          </span>
+
+          ${escapeHTML(
+            product.availability
+          )}
+
+        </div>
+
+      </div>
+
+
+      <div class="comparison-price">
+
+        <span class="price-label">
+          TOTAL
+        </span>
+
+        <strong>
+          Rs. ${formatPrice(product.total)}
+        </strong>
+
+        ${
+          difference > 0
+            ? `
+              <small>
+                +Rs. ${formatPrice(difference)}
+              </small>
+            `
+            : `
+              <small class="saving-small">
+                Lowest price
+              </small>
+            `
+        }
+
+      </div>
+
+
+      <div class="comparison-action">
+
+        ${dealButton(
+          product.url,
+          "VIEW DEAL ↗",
+          "deal-button"
+        )}
+
+      </div>
+
+    </article>
+
+  `;
+}
+
+
+// ==========================================================
+// IMAGE
+// ==========================================================
+
+function getImageHTML(product) {
+  if (!product.image) {
+    return "";
+  }
+
+  const image =
+    escapeHTML(product.image);
+
+  const name =
+    escapeHTML(product.name);
+
+  return `
+    <img
+      src="${image}"
+      alt="${name}"
+      loading="lazy"
+      class="result-product-image"
+      onerror="
+        this.style.display='none';
+        this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>₨</div>';
+      "
+    >
+  `;
+}
+
+
+// ==========================================================
+// AVAILABILITY
+// ==========================================================
+
+function isAvailable(value) {
+  const text =
+    String(value || "")
+      .toLowerCase();
+
+  if (
+    text.includes("out of stock") ||
+    text.includes("unavailable")
+  ) {
+    return false;
+  }
+
+  return (
+    text.includes("available") ||
+    text.includes("in stock") ||
+    text.includes("stock")
+  );
+}
+
+
+// ==========================================================
+// DEAL LINK
+// ==========================================================
+
+function dealButton(
+  url,
+  text,
+  className = ""
+) {
+  if (
+    !url ||
+    url === "#" ||
+    !url.trim()
+  ) {
+    return `
+      <button
+        class="${className} disabled-deal-button"
+        type="button"
+        disabled
+      >
+        ${escapeHTML(text)}
+      </button>
+    `;
+  }
+
+  return `
     <a
+      class="${className}"
       href="${escapeHTML(url)}"
       target="_blank"
       rel="noopener noreferrer"
     >
-
-      <button
-        type="button"
-      >
-
-        ${text}
-
-      </button>
-
+      ${escapeHTML(text)}
     </a>
-
   `;
-
 }
 
 
-// ==========================================
-// ESCAPE HTML
-// ==========================================
+// ==========================================================
+// LOADING
+// ==========================================================
 
-function escapeHTML(
-  value
+function setLoading(
+  container,
+  query
 ) {
+  container.innerHTML = `
 
-  return String(
-    value || ""
-  )
+    <div class="loading-state">
 
-    .replace(
-      /&/g,
-      "&amp;"
-    )
+      <div class="loading-orbit">
+        <span>₨</span>
+      </div>
 
-    .replace(
-      /</g,
-      "&lt;"
-    )
+      <h2>
+        Hunting the best price...
+      </h2>
 
-    .replace(
-      />/g,
-      "&gt;"
-    )
+      <p>
+        Checking stores for
+        “${escapeHTML(query)}”
+      </p>
 
-    .replace(
-      /"/g,
-      "&quot;"
-    )
+      <div class="loading-bars">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
 
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+    </div>
 
+  `;
+}
+
+
+// ==========================================================
+// NO RESULTS
+// ==========================================================
+
+function showNoResults(query) {
+  const container =
+    document.getElementById("results");
+
+  if (!container) return;
+
+  container.innerHTML = `
+
+    <div class="no-results">
+
+      <div class="no-results-icon">
+        🔍
+      </div>
+
+      <h2>
+        No deals found.
+      </h2>
+
+      <p>
+        We couldn't find
+        “${escapeHTML(query)}”
+        right now.
+      </p>
+
+      <div class="no-results-tips">
+
+        <span>
+          Try fewer words
+        </span>
+
+        <span>
+          Check spelling
+        </span>
+
+        <span>
+          Try a category
+        </span>
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+
+// ==========================================================
+// MESSAGE
+// ==========================================================
+
+function showMessage(
+  title,
+  message
+) {
+  const container =
+    document.getElementById("results");
+
+  if (!container) return;
+
+  container.innerHTML = `
+
+    <div class="no-results">
+
+      <div class="no-results-icon">
+        ⚡
+      </div>
+
+      <h2>
+        ${escapeHTML(title)}
+      </h2>
+
+      <p>
+        ${escapeHTML(message)}
+      </p>
+
+    </div>
+
+  `;
+}
+
+
+// ==========================================================
+// HELPERS
+// ==========================================================
+
+function formatPrice(price) {
+  return Number(
+    price || 0
+  ).toLocaleString("en-IN");
+}
+
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
