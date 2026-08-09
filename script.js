@@ -29,7 +29,8 @@ function parseCSV(csv) {
       shipping: Number(values[3]) || 0,
       currency: values[4]?.trim() || "NPR",
       url: values[5]?.trim() || "#",
-      lastUpdated: values[6]?.trim() || "Not provided"
+      lastUpdated: values[6]?.trim() || "Not provided",
+      image: values[7]?.trim() || ""
     };
 
   }).filter(product => product.name);
@@ -138,9 +139,7 @@ function displayResults(results) {
 
     resultsBox.innerHTML = `
       <h2>No products found</h2>
-      <p>
-        Try another product or category.
-      </p>
+      <p>Try another product or category.</p>
     `;
 
     return;
@@ -171,11 +170,24 @@ function displayResults(results) {
     highestPrice - cheapest.total;
 
 
+  // Best product image
+  const bestImage = cheapest.image
+    ? `<img
+         src="${cheapest.image}"
+         alt="${cheapest.name}"
+         class="best-product-image"
+         onerror="this.style.display='none'"
+       >`
+    : "";
+
+
   resultsBox.innerHTML = `
 
     <h2>🥇 Best Price</h2>
 
     <div class="best-price">
+
+      ${bestImage}
 
       <span class="badge">
         LOWEST TOTAL PRICE
@@ -233,30 +245,45 @@ function displayResults(results) {
 
       <div class="product">
 
-        <div>
+        <div class="product-info">
 
-          <h3>
-            ${index === 0 ? "🥇 " : ""}
-            ${product.store}
-          </h3>
+          ${
+            product.image
+            ? `<img
+                 src="${product.image}"
+                 alt="${product.name}"
+                 class="product-image"
+                 onerror="this.style.display='none'"
+               >`
+            : ""
+          }
 
-          <p>
-            ${product.name}
-          </p>
+          <div>
 
-          <p>
-            Product:
-            Rs. ${product.price.toLocaleString()}
-          </p>
+            <h3>
+              ${index === 0 ? "🥇 " : ""}
+              ${product.store}
+            </h3>
 
-          <p>
-            Shipping:
-            Rs. ${product.shipping.toLocaleString()}
-          </p>
+            <p>
+              ${product.name}
+            </p>
 
-          <p class="updated">
-            🕐 ${product.lastUpdated}
-          </p>
+            <p>
+              Product:
+              Rs. ${product.price.toLocaleString()}
+            </p>
+
+            <p>
+              Shipping:
+              Rs. ${product.shipping.toLocaleString()}
+            </p>
+
+            <p class="updated">
+              🕐 ${product.lastUpdated}
+            </p>
+
+          </div>
 
         </div>
 
