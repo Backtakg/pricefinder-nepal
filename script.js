@@ -1,92 +1,85 @@
-const products = [
-  {
-    name: "Samsung Galaxy S25 256GB",
-    store: "Daraz Nepal",
-    price: 109999,
-    shipping: 0,
-    currency: "NPR",
-    url: "https://www.daraz.com.np/",
-    lastUpdated: "Demo data"
-  },
-
-  {
-    name: "Samsung Galaxy S25 256GB",
-    store: "Nepali Online Store",
-    price: 112000,
-    shipping: 200,
-    currency: "NPR",
-    url: "#",
-    lastUpdated: "Demo data"
-  },
-
-  {
-    name: "Samsung Galaxy S25 256GB",
-    store: "Local Online Store",
-    price: 108500,
-    shipping: 1500,
-    currency: "NPR",
-    url: "#",
-    lastUpdated: "Demo data"
-  },
-
-  {
-    name: "iPhone 15 128GB",
-    store: "Daraz Nepal",
-    price: 82000,
-    shipping: 0,
-    currency: "NPR",
-    url: "https://www.daraz.com.np/",
-    lastUpdated: "Demo data"
-  },
-
-  {
-    name: "iPhone 15 128GB",
-    store: "Nepali Online Store",
-    price: 79999,
-    shipping: 500,
-    currency: "NPR",
-    url: "#",
-    lastUpdated: "Demo data"
-  }
-];
+let products = [];
 
 
+// Load products from CSV
+fetch("products.csv")
+  .then(response => response.text())
+  .then(csv => {
+    products = parseCSV(csv);
+    console.log("Products loaded:", products);
+  })
+  .catch(error => {
+    console.error("Could not load products.csv:", error);
+  });
+
+
+// Convert CSV into products
+function parseCSV(csv) {
+
+  const lines = csv.trim().split("\n");
+
+  const headers = lines[0].split(",").map(header =>
+    header.trim()
+  );
+
+  return lines.slice(1).map(line => {
+
+    const values = line.split(",");
+
+    return {
+      name: values[0]?.trim() || "",
+      store: values[1]?.trim() || "",
+      price: Number(values[2]) || 0,
+      shipping: Number(values[3]) || 0,
+      currency: values[4]?.trim() || "NPR",
+      url: values[5]?.trim() || "#",
+      lastUpdated: values[6]?.trim() || "Unknown"
+    };
+
+  });
+}
+
+
+// Search products
 function searchProduct() {
 
-  const searchInput = document.getElementById("searchInput");
+  const searchInput =
+    document.getElementById("searchInput");
 
-  if (!searchInput) {
-    return;
-  }
-
-  const search = searchInput.value.trim().toLowerCase();
+  const search =
+    searchInput.value.trim().toLowerCase();
 
   if (!search) {
+
     alert("Please enter a product name.");
+
     return;
   }
+
 
   const results = products.filter(product =>
     product.name.toLowerCase().includes(search)
   );
 
+
   displayResults(results);
 }
 
 
+// Display results
 function displayResults(results) {
 
-  const resultsBox = document.getElementById("results");
+  const resultsBox =
+    document.getElementById("results");
 
-  if (!resultsBox) {
-    return;
-  }
 
   if (results.length === 0) {
 
     resultsBox.innerHTML = `
       <h2>No products found</h2>
-      <p>Try searching for another product.</p>
+      <p>
+        Try another product name.
+      </p>
     `;
 
     return;
@@ -95,12 +88,17 @@ function displayResults(results) {
 
   // Calculate total price
   results.forEach(product => {
-    product.total = product.price + product.shipping;
+
+    product.total =
+      product.price + product.shipping;
+
   });
 
 
-  // Sort cheapest first
-  results.sort((a, b) => a.total - b.total);
+  // Cheapest first
+  results.sort((a, b) =>
+    a.total - b.total
+  );
 
 
   // Cheapest product
@@ -130,22 +128,33 @@ function displayResults(results) {
       </p>
 
       <p>
-        Product: Rs. ${cheapest.price.toLocaleString()}<br>
-        Shipping: Rs. ${cheapest.shipping.toLocaleString()}
+        Product:
+        Rs. ${cheapest.price.toLocaleString()}
+        <br>
+
+        Shipping:
+        Rs. ${cheapest.shipping.toLocaleString()}
       </p>
 
       <p class="updated">
         🕐 ${cheapest.lastUpdated}
       </p>
 
-      <a href="${cheapest.url}" target="_blank">
-        <button>VIEW DEAL</button>
+      <a
+        href="${cheapest.url}"
+        target="_blank"
+      >
+        <button>
+          VIEW DEAL
+        </button>
       </a>
 
     </div>
 
 
-    <h2>All Prices</h2>
+    <h2>
+      All Prices
+    </h2>
 
 
     ${results.map(product => `
@@ -182,13 +191,19 @@ function displayResults(results) {
         <div>
 
           <strong>
-            Rs. ${product.total.toLocaleString()}
+            Rs.
+            ${product.total.toLocaleString()}
           </strong>
 
           <br><br>
 
-          <a href="${product.url}" target="_blank">
-            <button>VIEW</button>
+          <a
+            href="${product.url}"
+            target="_blank"
+          >
+            <button>
+              VIEW
+            </button>
           </a>
 
         </div>
