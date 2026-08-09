@@ -6,7 +6,6 @@ const products = [
     shipping: 0,
     url: "https://www.daraz.com.np/"
   },
-
   {
     name: "Samsung Galaxy S25 256GB",
     store: "Nepali Online Store",
@@ -14,7 +13,6 @@ const products = [
     shipping: 200,
     url: "#"
   },
-
   {
     name: "Samsung Galaxy S25 256GB",
     store: "Local Online Store",
@@ -22,7 +20,6 @@ const products = [
     shipping: 1500,
     url: "#"
   },
-
   {
     name: "iPhone 15 128GB",
     store: "Daraz Nepal",
@@ -30,7 +27,6 @@ const products = [
     shipping: 0,
     url: "https://www.daraz.com.np/"
   },
-
   {
     name: "iPhone 15 128GB",
     store: "Nepali Online Store",
@@ -41,12 +37,13 @@ const products = [
 ];
 
 function searchProduct() {
+  const searchInput = document.getElementById("searchInput");
 
-  const search = document
-    .getElementById("searchInput")
-    .value
-    .trim()
-    .toLowerCase();
+  if (!searchInput) {
+    return;
+  }
+
+  const search = searchInput.value.trim().toLowerCase();
 
   if (!search) {
     alert("Please enter a product name.");
@@ -60,164 +57,34 @@ function searchProduct() {
   displayResults(results);
 }
 
-
 function displayResults(results) {
-
   const resultsBox = document.getElementById("results");
 
-  if (results.length === 0) {
+  if (!resultsBox) {
+    return;
+  }
 
+  if (results.length === 0) {
     resultsBox.innerHTML = `
       <h2>No products found</h2>
       <p>Try searching for another product.</p>
     `;
-
     return;
   }
 
-  // Calculate total price
   results.forEach(product => {
     product.total = product.price + product.shipping;
   });
 
-  // Cheapest first
   results.sort((a, b) => a.total - b.total);
 
   const cheapest = results[0];
 
   resultsBox.innerHTML = `
-    <h2>Best Prices</h2>
+    <h2>🥇 Best Price</h2>
 
     <div class="best-price">
-      🥇 BEST PRICE
-
-      <h2>${cheapest.name}</h2>
-
-     <h3>
-  Rs. ${cheapest.total.toLocaleString()}
-</h3>
-
-<p>
-  🏆 Lowest total price
-</p>
-        ${cheapest.store}
-      </p>
-
-      <p>
-        Product: Rs. ${cheapest.price.toLocaleString()}<br>
-        Shipping: Rs. ${cheapest.shipping.toLocaleString()}
-      </p>
-
-      <a href="${cheapest.url}">
-        <button>VIEW DEAL</button>
-      </a>
-    </div>
-
-    <h2>Other Prices</h2>
-
-    ${results.map((product, index) => `
-
-      <div class="product">
-
-        <div>
-
-          <h3>${product.name}</h3>
-
-          <p>
-            🏪 ${product.store}
-          </p>
-
-          <p>
-            Product: Rs. ${product.price.toLocaleString()}
-          </p>
-
-          <p>
-            Shipping: Rs. ${product.shipping.toLocaleString()}
-          </p>
-
-        </div>
-
-        <div>
-
-          <strong>
-            Rs. ${product.total.toLocaleString()}
-          </strong>
-
-          <br><br>
-
-          <a href="${product.url}">
-            <button>VIEW</button>
-          </a>
-
-        </div>
-
-      </div>
-
-    `).join("")}
-  `;
-}    price: 79999,
-    shipping: 500,
-    url: "#"
-  }
-];  {
-    name: "iPhone 15 128GB",
-    store: "Store C",
-    price: 84500,
-    shipping: 0,
-    url: "#"
-  }
-];
-
-function searchProduct() {
-
-  const search = document
-    .getElementById("searchInput")
-    .value
-    .trim()
-    .toLowerCase();
-
-  if (!search) {
-    alert("Please enter a product name.");
-    return;
-  }
-
-  const results = products.filter(product =>
-    product.name.toLowerCase().includes(search)
-  );
-
-  displayResults(results);
-}
-
-
-function displayResults(results) {
-
-  const resultsBox = document.getElementById("results");
-
-  if (results.length === 0) {
-
-    resultsBox.innerHTML = `
-      <h2>No products found</h2>
-      <p>Try searching for another product.</p>
-    `;
-
-    return;
-  }
-
-  // Calculate total price
-  results.forEach(product => {
-    product.total = product.price + product.shipping;
-  });
-
-  // Cheapest first
-  results.sort((a, b) => a.total - b.total);
-
-  const cheapest = results[0];
-
-  resultsBox.innerHTML = `
-    <h2>Best Prices</h2>
-
-    <div class="best-price">
-      🥇 BEST PRICE
+      <span class="badge">LOWEST TOTAL PRICE</span>
 
       <h2>${cheapest.name}</h2>
 
@@ -226,7 +93,7 @@ function displayResults(results) {
       </h3>
 
       <p>
-        ${cheapest.store}
+        🏪 ${cheapest.store}
       </p>
 
       <p>
@@ -234,19 +101,17 @@ function displayResults(results) {
         Shipping: Rs. ${cheapest.shipping.toLocaleString()}
       </p>
 
-      <a href="${cheapest.url}">
+      <a href="${cheapest.url}" target="_blank">
         <button>VIEW DEAL</button>
       </a>
     </div>
 
-    <h2>Other Prices</h2>
+    <h2>All Prices</h2>
 
-    ${results.map((product, index) => `
-
+    ${results.map(product => `
       <div class="product">
 
         <div>
-
           <h3>${product.name}</h3>
 
           <p>
@@ -260,25 +125,21 @@ function displayResults(results) {
           <p>
             Shipping: Rs. ${product.shipping.toLocaleString()}
           </p>
-
         </div>
 
         <div>
-
           <strong>
             Rs. ${product.total.toLocaleString()}
           </strong>
 
           <br><br>
 
-          <a href="${product.url}">
+          <a href="${product.url}" target="_blank">
             <button>VIEW</button>
           </a>
-
         </div>
 
       </div>
-
     `).join("")}
   `;
 }
