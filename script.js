@@ -18,10 +18,6 @@ function parseCSV(csv) {
 
   const lines = csv.trim().split("\n");
 
-  const headers = lines[0].split(",").map(header =>
-    header.trim()
-  );
-
   return lines.slice(1).map(line => {
 
     const values = line.split(",");
@@ -33,10 +29,10 @@ function parseCSV(csv) {
       shipping: Number(values[3]) || 0,
       currency: values[4]?.trim() || "NPR",
       url: values[5]?.trim() || "#",
-      lastUpdated: values[6]?.trim() || "Unknown"
+      lastUpdated: values[6]?.trim() || "Not provided"
     };
 
-  });
+  }).filter(product => product.name);
 }
 
 
@@ -50,170 +46,19 @@ function searchProduct() {
     searchInput.value.trim().toLowerCase();
 
   if (!search) {
-
     alert("Please enter a product name.");
-
     return;
   }
-
 
   const results = products.filter(product =>
     product.name.toLowerCase().includes(search)
   );
 
-
   displayResults(results);
 }
 
 
-// Display results
-function displayResults(results) {
-
-  const resultsBox =
-    document.getElementById("results");
-
-
-  if (results.length === 0) {
-
-    resultsBox.innerHTML = `
-      <h2>No products found</h2>
-      <p>
-        Try another product name.
-      </p>
-    `;
-
-    return;
-  }
-
-
-  // Calculate total price
-  results.forEach(product => {
-
-    product.total =
-      product.price + product.shipping;
-
-  });
-
-
-  // Cheapest first
-  results.sort((a, b) =>
-    a.total - b.total
-  );
-
-
-  // Cheapest product
-  const cheapest = results[0];
-
-
-  resultsBox.innerHTML = `
-
-    <h2>🥇 Best Price</h2>
-
-    <div class="best-price">
-
-      <span class="badge">
-        LOWEST TOTAL PRICE
-      </span>
-
-      <h2>
-        ${cheapest.name}
-      </h2>
-
-      <h3>
-        Rs. ${cheapest.total.toLocaleString()}
-      </h3>
-
-      <p>
-        🏪 ${cheapest.store}
-      </p>
-
-      <p>
-        Product:
-        Rs. ${cheapest.price.toLocaleString()}
-        <br>
-
-        Shipping:
-        Rs. ${cheapest.shipping.toLocaleString()}
-      </p>
-
-      <p class="updated">
-        🕐 ${cheapest.lastUpdated}
-      </p>
-
-      <a
-        href="${cheapest.url}"
-        target="_blank"
-      >
-        <button>
-          VIEW DEAL
-        </button>
-      </a>
-
-    </div>
-
-
-    <h2>
-      All Prices
-    </h2>
-
-
-    ${results.map(product => `
-
-      <div class="product">
-
-        <div>
-
-          <h3>
-            ${product.name}
-          </h3>
-
-          <p>
-            🏪 ${product.store}
-          </p>
-
-          <p>
-            Product:
-            Rs. ${product.price.toLocaleString()}
-          </p>
-
-          <p>
-            Shipping:
-            Rs. ${product.shipping.toLocaleString()}
-          </p>
-
-          <p>
-            🕐 ${product.lastUpdated}
-          </p>
-
-        </div>
-
-
-        <div>
-
-          <strong>
-            Rs.
-            ${product.total.toLocaleString()}
-          </strong>
-
-          <br><br>
-
-          <a
-            href="${product.url}"
-            target="_blank"
-          >
-            <button>
-              VIEW
-            </button>
-          </a>
-
-        </div>
-
-      </div>
-
-    `).join("")}
-
-  `;
-}
+// Search by category
 function searchCategory(category) {
 
   const categoryWords = {
@@ -262,7 +107,7 @@ function searchCategory(category) {
 
   };
 
-  const words = categoryWords[category];
+  const words = categoryWords[category] || [];
 
   const results = products.filter(product => {
 
@@ -275,4 +120,169 @@ function searchCategory(category) {
   });
 
   displayResults(results);
+}
+
+
+// Display results
+function displayResults(results) {
+
+  const resultsBox =
+    document.getElementById("results");
+
+  if (!resultsBox) {
+    return;
+  }
+
+
+  if (results.length === 0) {
+
+    resultsBox.innerHTML = `
+      <h2>No products found</h2>
+      <p>
+        Try another product or category.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  // Calculate total price
+  results.forEach(product => {
+
+    product.total =
+      product.price + product.shipping;
+
+  });
+
+
+  // Cheapest first
+  results.sort((a, b) =>
+    a.total - b.total
+  );
+
+
+  const cheapest = results[0];
+
+  const highestPrice =
+    Math.max(...results.map(product => product.total));
+
+  const savings =
+    highestPrice - cheapest.total;
+
+
+  resultsBox.innerHTML = `
+
+    <h2>🥇 Best Price</h2>
+
+    <div class="best-price">
+
+      <span class="badge">
+        LOWEST TOTAL PRICE
+      </span>
+
+      <h2>
+        ${cheapest.name}
+      </h2>
+
+      <h3>
+        Rs. ${cheapest.total.toLocaleString()}
+      </h3>
+
+      <p>
+        🏪 ${cheapest.store}
+      </p>
+
+      <p>
+        Product:
+        Rs. ${cheapest.price.toLocaleString()}
+        <br>
+
+        Shipping:
+        Rs. ${cheapest.shipping.toLocaleString()}
+      </p>
+
+      <p class="saving">
+        💰 You save
+        Rs. ${savings.toLocaleString()}
+      </p>
+
+      <p class="updated">
+        🕐 Last updated:
+        ${cheapest.lastUpdated}
+      </p>
+
+      <a
+        href="${cheapest.url}"
+        target="_blank"
+      >
+        <button>
+          VIEW BEST DEAL
+        </button>
+      </a>
+
+    </div>
+
+
+    <h2>
+      Compare All Stores
+    </h2>
+
+
+    ${results.map((product, index) => `
+
+      <div class="product">
+
+        <div>
+
+          <h3>
+            ${index === 0 ? "🥇 " : ""}
+            ${product.store}
+          </h3>
+
+          <p>
+            ${product.name}
+          </p>
+
+          <p>
+            Product:
+            Rs. ${product.price.toLocaleString()}
+          </p>
+
+          <p>
+            Shipping:
+            Rs. ${product.shipping.toLocaleString()}
+          </p>
+
+          <p class="updated">
+            🕐 ${product.lastUpdated}
+          </p>
+
+        </div>
+
+
+        <div>
+
+          <strong>
+            Rs. ${product.total.toLocaleString()}
+          </strong>
+
+          <br><br>
+
+          <a
+            href="${product.url}"
+            target="_blank"
+          >
+            <button>
+              VIEW
+            </button>
+          </a>
+
+        </div>
+
+      </div>
+
+    `).join("")}
+
+  `;
 }
